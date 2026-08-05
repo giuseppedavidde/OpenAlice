@@ -276,8 +276,13 @@ export async function syncOpenCodeWorkspaceTheme(cwd: string): Promise<boolean> 
  *     native config surface alone avoids hidden app-mode ports and keeps the
  *     workspace tooling path identical to pi/shell/headless CLI usage.
  *
- *   - Provider override: `opencode.json` `provider.<name>` with a custom
- *     `baseURL` + `apiKey` + a top-level default `model = "<provider>/<id>"`.
+ *   - Native login vs injected provider: opencode accepts both modes. When
+ *     no workspace credential is configured, the runtime starts with its own
+ *     native subscription login (like claude/codex — models are resolved
+ *     through the user's opencode-go subscription). When OpenAlice injects a
+ *     workspace provider via `opencode.json`, the injected `provider.workspace`
+ *     and top-level `model` override the native fallback.
+ *
  *     Key written directly into the workspace file (same trust model as codex's
  *     `.codex/env.json`). OpenAlice owns only `provider.workspace`, the matching
  *     top-level model, and its schema marker; unrelated opencode config survives
@@ -291,8 +296,11 @@ export async function syncOpenCodeWorkspaceTheme(cwd: string): Promise<boolean> 
  *   - Hermetic spawn: `OPENCODE_DISABLE_{MODELS_FETCH,AUTOUPDATE,LSP_DOWNLOAD}`
  *     pinned in `composeEnv` so a trading workbench never phones home at spawn
  *     (opencode has no covert telemetry — these kill its *functional* outbound
- *     calls; provider/models are supplied explicitly so the model catalog is
- *     never needed).
+ *     calls). In injected-provider mode the model catalog is never needed;
+ *     in native-login mode `OPENCODE_DISABLE_MODELS_FETCH` also suppresses the
+ *     models.dev catalog fetch, which may prevent listing available models from
+ *     the user's subscription on a fresh spawn. Resume and existing sessions
+ *     are unaffected (models are already resolved).
  *
  *   - Resume: the bare TUI command (`opencode [project]`, the default) accepts
  *     top-level `-c/--continue` (last session in cwd) and `-s/--session <id>`
@@ -327,7 +335,7 @@ export const opencodeAdapter: CliAdapter = {
     transcriptDiscovery: 'subprocess',
     headless: true,
     aiProvider: {
-      credentialSource: 'workspace-required',
+      credentialSource: 'runtime-or-workspace',
       wirePreference: ['google-generative-ai', 'openai-chat', 'anthropic', 'openai-responses'],
       defaultWire: 'openai-chat',
       vendorPolicies: {

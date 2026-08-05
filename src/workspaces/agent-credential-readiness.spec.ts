@@ -47,7 +47,7 @@ function adapter(id: string, cfg: WorkspaceAiCred | null = null) {
       resumeById: true,
       transcriptDiscovery: 'none',
       aiProvider: {
-        credentialSource: id === 'opencode' || id === 'pi'
+        credentialSource: id === 'pi'
           ? 'workspace-required'
           : 'runtime-or-workspace',
         wirePreference: id === 'claude' ? ['anthropic'] : ['openai-chat'],
@@ -68,17 +68,19 @@ beforeEach(() => {
 });
 
 describe('agent credential readiness', () => {
-  it('treats claude/codex style runtimes as ready because they own login state', async () => {
-    const a = adapter('claude');
-    const row = await getAgentCredentialReadiness({ meta, agentId: 'claude', adapter: a, credentials: {} });
+  it('treats claude/codex/opencode style runtimes as ready because they own login state', async () => {
+    for (const agentId of ['claude', 'opencode']) {
+      const a = adapter(agentId);
+      const row = await getAgentCredentialReadiness({ meta, agentId, adapter: a, credentials: {} });
 
-    expect(row.ready).toBe(true);
-    expect(row.requiresCredential).toBe(false);
-    expect(row.source).toBe('runtime-login');
-    expect(a.readAiConfig).not.toHaveBeenCalled();
+      expect(row.ready).toBe(true);
+      expect(row.requiresCredential).toBe(false);
+      expect(row.source).toBe('runtime-login');
+      expect(a.readAiConfig).not.toHaveBeenCalled();
+    }
   });
 
-  it('accepts an existing usable workspace config even when the Alice vault is empty', async () => {
+  it('opencode is ready with native login; existing workspace config is preserved as override', async () => {
     const a = adapter('opencode', {
       baseUrl: null,
       apiKey: 'sk-hand-written',
@@ -90,8 +92,29 @@ describe('agent credential readiness', () => {
     const row = await ensureAgentCredentialReady({ meta, agentId: 'opencode', adapter: a });
 
     expect(row.ready).toBe(true);
-    expect(row.source).toBe('workspace-config');
+    expect(row.source).toBe('runtime-login');
     expect(a.writeAiConfig).not.toHaveBeenCalled();
+  });
+
+  it('opencode is ready without any credential in the vault', async () => {
+    const a = adapter('opencode', null);
+    vi.mocked(readCredentials).mockResolvedValue({});
+
+    const row = await getAgentCredentialReadiness({ meta, agentId: 'opencode', adapter: a });
+    expect(row.ready).toBe(true);
+    expect(row.source).toBe('runtime-login');
+
+    await expect(ensureAgentCredentialReady({ meta, agentId: 'opencode', adapter: a }))
+      .resolves.toMatchObject({ ready: true, source: 'runtime-login' });
+  });
+
+  it('treats pi as workspace-required (unchanged)', async () => {
+    const a = adapter('pi', null);
+    vi.mocked(readCredentials).mockResolvedValue({});
+
+    const row = await getAgentCredentialReadiness({ meta, agentId: 'pi', adapter: a });
+    expect(row.ready).toBe(false);
+    expect(row.source).toBe('missing');
   });
 
   it('does not overwrite an explicit Workspace wire when Quick Chat repeats the same credential', async () => {
@@ -139,7 +162,7 @@ describe('agent credential readiness', () => {
     expect(vi.mocked(setCredentialLastModel)).toHaveBeenCalledWith('openai-1', 'gpt-5.6');
   });
 
-  it('does not treat a custom credential without a remembered model as injectable', async () => {
+  it('opencode is ready with native login even when vault has only unmodelled credentials', async () => {
     const a = adapter('opencode', null);
     vi.mocked(readCredentials).mockResolvedValue({
       custom: {
@@ -151,10 +174,12 @@ describe('agent credential readiness', () => {
     });
 
     const row = await getAgentCredentialReadiness({ meta, agentId: 'opencode', adapter: a });
-    expect(row.ready).toBe(false);
-    expect(row.source).toBe('missing');
+    expect(row.ready).toBe(true);
+    expect(row.source).toBe('runtime-login');
 
+    // ensureAgentCredentialReady also succeeds without injecting, since
+    // runtime-or-workspace agents are ready with native login.
     await expect(ensureAgentCredentialReady({ meta, agentId: 'opencode', adapter: a }))
-      .rejects.toBeInstanceOf(AgentCredentialError);
+      .resolves.toMatchObject({ ready: true, source: 'runtime-login' });
   });
 });

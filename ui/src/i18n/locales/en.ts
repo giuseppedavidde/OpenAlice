@@ -499,7 +499,7 @@ export const en = {
     deleteCredentialAria: 'Delete {{credential}}',
     deleteConfirmTitle: 'Delete {{credential}}?',
     deleteConfirmMessage: 'This permanently removes {{slug}} from Alice’s credential vault and clears any new Workspace defaults that use it. Existing Workspace files are not changed.',
-    defaultsIntro: "Choose what Alice writes into each new workspace at creation. Existing workspaces stay untouched and can still be overridden locally. opencode and Pi need an API credential; Claude Code and Codex normally use their own CLI login.",
+    defaultsIntro: "Choose what Alice writes into each new workspace at creation. Existing workspaces stay untouched and can still be overridden locally. Pi needs an API credential; Claude Code, Codex, and opencode normally use their own CLI login.",
     defaultsTitle: 'New workspace defaults',
     defaultCredentialLabel: '{{agent}} default credential',
     apiProtocolLabel: '{{agent}} API protocol',
@@ -1127,7 +1127,7 @@ export const en = {
         configuredBody_one: '{{count}} vault credential is available for workspace injection.',
         configuredBody_other: '{{count}} vault credentials are available for workspace injection.',
         cliBody: 'Claude Code and Codex can use their own login; vault credentials stay optional.',
-        addBody: 'Pi and opencode need a vault credential before they can call a model.',
+        addBody: 'Pi needs a vault credential before it can call a model. Claude Code, Codex, and opencode can use their own login.',
         action: 'Open AI Provider',
       },
       mode: {

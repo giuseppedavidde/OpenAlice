@@ -116,7 +116,7 @@ runtime, Alice falls back to the first registered runtime.
 |---|---|---|
 | Claude Code | `.claude/settings.local.json`: `model`, `effortLevel` | `--model`, `--effort` |
 | Codex | `.codex/config.toml`: `model`, `model_reasoning_effort` | `--model`, `-c model_reasoning_effort=...` |
-| opencode | `opencode.json` provider/model binding | `--model`, `--variant` |
+| opencode | `opencode.json` provider/model binding; native subscription login without workspace config | `--model`, `--variant` |
 | Pi | project settings plus registered provider | `--model`, `--thinking` |
 
 An Issue may request only agent/model/effort. Endpoint, provider, key, auth, and
