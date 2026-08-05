@@ -80,6 +80,7 @@ export default defineConfig({
   server: {
     port: uiPort,
     strictPort,
+    open: true,
     proxy: {
       '/api': {
         target: `http://localhost:${backendPort}`,
