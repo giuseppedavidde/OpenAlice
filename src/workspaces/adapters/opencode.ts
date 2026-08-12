@@ -329,8 +329,11 @@ export const opencodeAdapter: CliAdapter = {
       const selectedModel = ai && (ai.apiKey || ai.baseUrl) && model
         ? `${OPENCODE_SESSION_PROVIDER_NAME}/${model}`
         : model;
-      const args = [
+      const interactiveArgs = [
         ...(selectedModel ? ['--model', selectedModel] : []),
+      ];
+      const headlessArgs = [
+        ...interactiveArgs,
         ...(runtime.binding.reasoningEffort
           ? ['--variant', runtime.binding.reasoningEffort]
           : []),
@@ -344,7 +347,7 @@ export const opencodeAdapter: CliAdapter = {
           ...(selectedModel ? { model: selectedModel } : {}),
         });
       }
-      return { env, interactiveArgs: args, headlessArgs: args, webArgs: args };
+      return { env, interactiveArgs, headlessArgs, webArgs: interactiveArgs };
     },
   },
 
@@ -489,6 +492,7 @@ export const opencodeAdapter: CliAdapter = {
     return env;
   },
 
+  /** @deprecated Native-project compatibility export; managed Sessions use sessionRuntime. */
   async writeAiConfig(cwd: string, cred: WorkspaceAiCred): Promise<void> {
     const hasProvider = !!(cred.baseUrl || cred.apiKey || cred.model);
     if (!hasProvider) {
@@ -524,6 +528,7 @@ export const opencodeAdapter: CliAdapter = {
     });
   },
 
+  /** @deprecated Compatibility inspection for legacy Session bindings only. */
   async readAiConfig(cwd: string): Promise<WorkspaceAiCred | null> {
     const raw = await readWorkspaceFile(cwd, OPENCODE_CONFIG_PATH);
     if (raw === null) return null;
