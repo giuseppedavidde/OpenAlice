@@ -29,6 +29,30 @@ the durable truth after it changes. Git history is the archive.
 
 ## Active
 
+- [[plans/bun-cli-distribution.md]] — Replaces the expanded Node headless
+  Runtime with a Bun-compiled, multi-process CLI distribution. Direct,
+  npm/Bun, Homebrew, and AUR channels consume one accepted artifact set. The
+  CLI package owns OpenAlice only: Agent Runtime installation and Electron
+  packaging stay outside this plan. The native CLI is public through the
+  separately dispatched `v0.91.0-beta.2`; stable/beta discovery now uses the
+  OpenAlice CDN manifests. The retained no-domain Railway profile has passed
+  real migration, OpenCode resume, normal restart, hard-kill recovery, and a
+  non-destructive dev-to-pinned-beta2 replacement; disposable empty-Volume and
+  failure-fallback journeys, native PowerShell, and external package-manager
+  activation remain open on focused branches from current `dev`.
+- [[plans/remote-project-fleet.md]] — Adds a machine-aware Supervisor fleet,
+  remote AliceProject inventory/connection, and safe local-to-SSH project
+  transfer for portable configuration and Workspaces while deliberately
+  excluding native/OpenAlice Session continuation state. The current
+  beta-blocking increment makes the attached browser truthful about remote
+  identity, Agent and Broker Pack capability, scheduled-work blockers,
+  reconnect recovery, and public Session titles. Controller/remote release
+  negotiation and a consented Railway redeploy adapter remain a separate
+  authority increment without background polling or SSH-owned installation.
+- [[plans/auto-prediction-harness.md]] — Auto Prediction Beta conversation
+  Harness is in `dev`; managed AP/AQ Studio supervision, opaque routing, and
+  embedded product surfaces are implemented. Shared verified/unverified source
+  release management and cross-runtime acceptance remain active.
 - [[plans/antigravity-adapter.md]] — Antigravity (`agy`) CliAdapter.
   PATH `agy` only; never spawn `antigravity` / `gemini`.
   Serial PR from `feat/agy-adapter`; do not merge until Ame says so.
@@ -47,6 +71,9 @@ the durable truth after it changes. Git history is the archive.
   Telegram phone desk: What is the heartbeat prompt, comments are the chat,
   Connector only transports. Increment 1 bound the desk in Settings.
   Increment 2 projects comments unless `[[no-reply]]`.
+- [[plans/connector-desk.md]] — Desk specimen is shared; each `desk` adapter
+  owns its own Issue. Increment 1 generalizes `telegramConnector` →
+  `connectorDesk: <id>`. Feishu adapter is a later increment.
 - [[plans/connector-inbox-commands.md]] — Connectors declare `inbox` and
   `settings` capabilities and implement their own slash-command forms.
   Telegram uses a bounded `/inbox` summary plus on-demand file pull;
@@ -56,9 +83,6 @@ the durable truth after it changes. Git history is the archive.
   (`active` / `archived` / `deleted`) separate from workspace `retired`, uncap
   the Ask Alice roster, and make Archive the floor action instead of deleting
   a coworker. Increment 1 landed in PR #1069; persisted presence remains open.
-- [[plans/release-feedback-reliability.md]] — Batch 1 (deterministic/early
-  release feedback) landed in PR #1061. Batch 2 still needs per-platform N-1
-  fan-in and accepted-tree provenance without weakening release gates.
 - [[plans/shell-first-cli-supervisor.md]] — Delivers a first-class Shell
   Supervisor TUI, persistent Guardian-owned Runtime lifecycle, standalone
   headless release bundle, atomic update/rollback, and real N-1 plus PTY

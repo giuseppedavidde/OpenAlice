@@ -12,6 +12,7 @@ import { createWorkspaceRoutes } from './workspaces.js';
 import { HeadlessCapacityError, type WorkspaceService } from '../../workspaces/service.js';
 import { TemplateUpgradeError } from '../../workspaces/template-upgrade.js';
 import { WorkspaceAbsorbError } from '../../workspaces/workspace-absorb.js';
+import { HarnessSourceUpgradeError } from '../../workspaces/harness-source-upgrade.js';
 import { readWorkspaceMetadata } from '../../workspaces/workspace-metadata.js';
 import { emptyAgentSessionRuntime } from '../../workspaces/cli-adapter.js';
 import { readWorkspaceRuntimeSettings } from '../../workspaces/workspace-runtime-settings.js';
@@ -43,6 +44,7 @@ function build(
     deleteSessionPresence?: any;
     lifecycle?: any;
     templateUpgrades?: any;
+    sourceUpgrades?: any;
     workspaceAbsorbs?: any;
     availability?: Record<string, { installed: boolean; path: string | null }>;
     spawnPlan?: any;
@@ -127,6 +129,13 @@ function build(
       changedPaths: ['research/new.md'], skippedPaths: [], departedDir: '/departed/ws-2',
     })),
   };
+  const sourceUpgrades = opts.sourceUpgrades ?? {
+    plan: vi.fn(async () => ({ workspaceId: 'ws-1', planDigest: 'source-digest-1', toVersion: 'v2.0.0' })),
+    apply: vi.fn(async () => ({
+      workspaceId: 'ws-1', fromVersion: 'v1.0.0', toVersion: 'v2.0.0',
+      commit: 'source123', verified: true,
+    })),
+  };
   const svc = {
     registry: { get: (id: string) => (id === 'ws-1' ? meta : undefined) },
     resolveRuntimeWorkspace: (id: string) => (id === meta.id ? meta : undefined),
@@ -187,6 +196,7 @@ function build(
     probeAgentRuntimeReadiness,
     lifecycle,
     templateUpgrades,
+    sourceUpgrades,
     workspaceAbsorbs,
     sessionDirectory: vi.fn(async (id: string) => id === 'ws-1'
       ? (opts.sessionDirectory ?? {
@@ -227,13 +237,22 @@ function build(
     }),
   } as unknown as WorkspaceService;
   return {
-    app: createWorkspaceRoutes(svc),
+    app: createWorkspaceRoutes(svc, {
+      readQuickChatPreferences: async () => ({ lastCredentialByAgent: {}, recentChatWorkspaceId: null }),
+      rememberRecentChatWorkspace: async (workspaceId) => ({ lastCredentialByAgent: {}, recentChatWorkspaceId: workspaceId }),
+      readHarnessPreferences: async () => ({
+        showHeadlessBornSessions: false,
+        showIssueAttachedSessions: false,
+        showUnverifiedHarnessReleases: false,
+      }),
+    }),
     runHeadlessTask,
     dispatchHeadlessTask,
     getAgentRuntimeReadiness,
     probeAgentRuntimeReadiness,
     lifecycle,
     templateUpgrades,
+    sourceUpgrades,
     workspaceAbsorbs,
     replaceRuntimeBinding,
   };
@@ -643,6 +662,54 @@ describe('Workspace template upgrade routes', () => {
     const result = await post(app, '/ws-1/template-upgrade', {});
     expect(result).toMatchObject({ status: 400, body: { error: 'bad_request' } });
     expect(templateUpgrades.apply).not.toHaveBeenCalled();
+  });
+});
+
+describe('Workspace Harness source upgrade routes', () => {
+  it('uses the same reviewed source plan contract for AQ and AP workspaces', async () => {
+    const sourceUpgrades = {
+      plan: vi.fn(async () => ({
+        workspaceId: 'ws-1', planDigest: 'source-digest-1', toVersion: 'v1.1.0', verified: true,
+      })),
+      apply: vi.fn(async () => ({
+        workspaceId: 'ws-1', fromVersion: 'v1.0.0', toVersion: 'v1.1.0', commit: 'source123', verified: true,
+      })),
+    };
+    const { app } = build({ sourceUpgrades });
+
+    expect(await get(app, '/ws-1/source-upgrade')).toMatchObject({
+      status: 200,
+      body: { plan: { planDigest: 'source-digest-1', verified: true } },
+    });
+    const applied = await post(app, '/ws-1/source-upgrade', {
+      planDigest: 'source-digest-1',
+      targetVersion: 'v1.1.0',
+    });
+    expect(applied.status).toBe(200);
+    expect(sourceUpgrades.plan).toHaveBeenCalledWith('ws-1', false, undefined);
+    expect(sourceUpgrades.apply).toHaveBeenCalledWith('ws-1', false, {
+      planDigest: 'source-digest-1',
+      targetVersion: 'v1.1.0',
+    });
+  });
+
+  it('returns the refreshed source plan when the reviewed digest is stale', async () => {
+    const refreshed = { workspaceId: 'ws-1', planDigest: 'source-digest-2' } as any;
+    const sourceUpgrades = {
+      plan: vi.fn(),
+      apply: vi.fn(async () => {
+        throw new HarnessSourceUpgradeError('stale_plan', 'Review again.', refreshed);
+      }),
+    };
+    const { app } = build({ sourceUpgrades });
+    const result = await post(app, '/ws-1/source-upgrade', {
+      planDigest: 'source-digest-1',
+      targetVersion: 'v1.1.0',
+    });
+    expect(result).toMatchObject({
+      status: 409,
+      body: { error: 'stale_plan', plan: { planDigest: 'source-digest-2' } },
+    });
   });
 });
 
@@ -1120,7 +1187,10 @@ describe('POST /:id/headless/:taskId/session', () => {
     };
     const svc = {
       registry: { get: (id: string) => id === 'ws-1' ? { id, dir: '/w' } : undefined },
-      headlessTasks: { get: (id: string) => id === task.taskId ? task : null },
+      headlessTasks: {
+        get: (id: string) => id === task.taskId ? task : null,
+        latestForResumeId: (resumeId: string) => resumeId === task.resumeId ? task : null,
+      },
       sessionRegistry,
       sessionCoordinator,
       resumeRegistry: {
@@ -1175,7 +1245,7 @@ describe('POST /:id/headless/:taskId/session', () => {
   });
 
   it('opens the same conversation directly by resumeId without a native id in the request', async () => {
-    const { app } = buildHeadlessSession();
+    const { app, records } = buildHeadlessSession();
     const opened = await post(app, '/ws-1/resumes/resume-run-1/session', {
       title: 'Durable Inbox report',
     });
@@ -1185,6 +1255,9 @@ describe('POST /:id/headless/:taskId/session', () => {
       sourceRunId: 'run-1',
       resumeId: 'resume-run-1',
       runtime: { credentialSource: 'native' },
+    });
+    expect(Array.from(records.values())[0]).toMatchObject({
+      fallbackTitle: 'Durable Inbox report',
     });
   });
 

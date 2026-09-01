@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
 import { formatRelativeTime } from '../../lib/intl'
 import { ArrowUpCircle, Bot, ChevronRight, Code, Cpu, GitBranch, ScrollText, Sparkles, Terminal, type LucideIcon } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { GitLogEntry, Workspace } from './api'
 import { sessionCoworkerLabel, workspaceDisplayName, workspaceDisplayTitle } from './display'
+import { workspaceActivityMs } from './sidebar-order'
 
 /**
  * Single-workspace card for the Workspaces Overview dashboard. Variant B
@@ -53,19 +53,14 @@ export function OverviewCard({
 }: Props) {
   const { t } = useTranslation()
   const w = workspace
+  const upgradeVersion = w.upgradeAvailable?.to.replace(/^v(?=\d)/, '') ?? ''
   const label = workspaceDisplayName(w)
   const hasRunning = w.sessions.some((s) => s.state === 'running')
   const previewSessions = w.sessions.slice(0, SESSION_PREVIEW_LIMIT)
   const hiddenSessionCount = w.sessions.length - previewSessions.length
   const mobileHiddenSessionCount = Math.max(0, w.sessions.length - MOBILE_SESSION_PREVIEW_LIMIT)
 
-  const lastActivityMs = useMemo(() => {
-    const sessionTs = w.sessions
-      .map((s) => new Date(s.lastActiveAt).getTime())
-      .filter((n) => Number.isFinite(n))
-    if (sessionTs.length === 0) return new Date(w.createdAt).getTime()
-    return Math.max(...sessionTs)
-  }, [w.sessions, w.createdAt])
+  const lastActivityMs = workspaceActivityMs(w)
 
   const dotClass = hasRunning
     ? 'bg-success'
@@ -106,12 +101,12 @@ export function OverviewCard({
               disabled={!onUpgrade}
               title={t('workspace.templateUpgrade', {
                 from: w.upgradeAvailable.from,
-                to: w.upgradeAvailable.to,
+                to: upgradeVersion,
               })}
-              className="oa-pressable pointer-events-auto flex min-h-10 shrink-0 items-center gap-1 rounded border border-primary/40 px-1.5 py-0.5 text-[10px] font-medium text-primary transition-colors hover:border-primary/80 hover:bg-primary/10 disabled:cursor-default disabled:hover:border-primary/40 disabled:hover:bg-transparent sm:min-h-0"
+              className={`oa-pressable pointer-events-auto flex min-h-10 shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors sm:min-h-0 ${w.upgradeAvailable.verified === false ? 'border border-warning/50 text-warning hover:bg-warning/10' : 'border border-primary/40 text-primary hover:border-primary/80 hover:bg-primary/10'}`}
             >
               <ArrowUpCircle size={10} strokeWidth={2.25} />
-              <span>v{w.upgradeAvailable.to}</span>
+              <span>v{upgradeVersion}</span>
             </button>
           )}
         </div>

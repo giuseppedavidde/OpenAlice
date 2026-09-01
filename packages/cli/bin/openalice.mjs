@@ -1,9 +1,13 @@
 #!/usr/bin/env node
 
-import { readFileSync, realpathSync } from 'node:fs'
+import { realpathSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
-import { installedContentIdentity, readInstallSource } from '../src/install-source.mjs'
+import {
+  CLI_VERSION,
+  installedContentIdentity,
+  readInstallSource,
+} from '../src/install-source.mjs'
 import {
   formatLifecycleHelp,
   formatRootHelp,
@@ -18,6 +22,7 @@ import {
   runObservabilityCommand,
 } from '../src/observability-command.mjs'
 import { connectRemote, formatRemoteHelp, parseRemoteArgs } from '../src/remote.mjs'
+import { formatRollbackHelp, runRollbackCommand } from '../src/rollback.mjs'
 import { formatServerHelp, parseServerArgs, runServerCommand } from '../src/server.mjs'
 import { connectSsh, formatSshHelp, parseSshConnectArgs } from '../src/ssh-connect.mjs'
 import { formatUninstallHelp, runUninstallCommand } from '../src/uninstall.mjs'
@@ -30,6 +35,10 @@ import {
   formatProjectHelp,
   runProjectCommand,
 } from '../src/project-command.ts'
+import {
+  formatMachineHelp,
+  runMachineCommand,
+} from '../src/machine-command.ts'
 
 export async function main(argv = process.argv.slice(2)) {
   const [command, ...args] = argv
@@ -44,6 +53,7 @@ export async function main(argv = process.argv.slice(2)) {
       installSource: await readInstallSource(),
       contentIdentity: installedContentIdentity(),
       managedRuntime: installedRuntimeInfo(version),
+      runtimeCapabilities: ['railway-flock-v1', 'railway-runtime-lock-v2'],
     })}\n`)
     return 0
   }
@@ -126,6 +136,13 @@ Prints a completion script to stdout without modifying shell configuration.
     }
     return runUpdateCommand(args)
   }
+  if (command === 'rollback') {
+    if (args.includes('--help') || args.includes('-h')) {
+      process.stdout.write(formatRollbackHelp())
+      return 0
+    }
+    return runRollbackCommand(args)
+  }
   if (command === 'uninstall') {
     if (args.includes('--help') || args.includes('-h')) {
       process.stdout.write(formatUninstallHelp())
@@ -154,6 +171,13 @@ Prints a completion script to stdout without modifying shell configuration.
     }
     return runProjectCommand(args)
   }
+  if (command === 'machine') {
+    if (args.includes('--help') || args.includes('-h')) {
+      process.stdout.write(formatMachineHelp())
+      return 0
+    }
+    return runMachineCommand(args)
+  }
   const error = new Error(`Unknown command: ${command}\n\n${formatRootHelp()}`)
   error.code = 'EUSAGE'
   error.exitCode = 2
@@ -161,6 +185,17 @@ Prints a completion script to stdout without modifying shell configuration.
 }
 
 function installedRuntimeInfo(productVersion) {
+  const nativePath = process.env['OPENALICE_RELEASE_DIR']?.trim()
+  const nativeContentIdentity = process.env['OPENALICE_CONTENT_IDENTITY']?.trim()
+  if (nativePath && /^[a-f0-9]{16}$/.test(nativeContentIdentity ?? '')) {
+    return {
+      productVersion,
+      platform: process.platform,
+      arch: process.arch,
+      path: nativePath,
+      contentIdentity: nativeContentIdentity,
+    }
+  }
   const path = process.env['OPENALICE_MANAGED_RUNTIME_PATH']?.trim()
   const contentIdentity = process.env[
     'OPENALICE_MANAGED_RUNTIME_CONTENT_IDENTITY'
@@ -176,11 +211,14 @@ function installedRuntimeInfo(productVersion) {
 }
 
 function readVersion() {
-  const packageUrl = new URL('../package.json', import.meta.url)
-  return JSON.parse(readFileSync(packageUrl, 'utf8')).version
+  return CLI_VERSION
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  globalThis.__OPENALICE_BUILD_VERSION__ === undefined
+  && process.argv[1]
+  && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   main().then(
     (code) => { process.exitCode = code },
     (error) => {

@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import type { HeadlessTaskRecord } from '../../api/headless'
 import { i18n } from '../../i18n'
 import type { AgentInfo, SessionRecord, Workspace } from './api'
 import { SessionRow, WorkspaceRow } from './Sidebar'
@@ -134,6 +135,55 @@ describe('WorkspaceRow session launcher', () => {
     fireEvent.click(screen.getByRole('menuitem', { name: 'Offboard workspace' }))
     expect(onDelete).toHaveBeenCalledWith(workspace.id)
   })
+
+  it('presents headless Issue work by business identity and opens it with a clean title', () => {
+    const onOpenHeadlessRun = vi.fn()
+    const run: HeadlessTaskRecord = {
+      taskId: 'run-daily-risk-scan',
+      resumeId: 'resume-daily-risk-scan',
+      resumable: true,
+      wsId: workspace.id,
+      agent: 'codex',
+      prompt: 'Reconstruct the Issue context, inject target JSON, and continue.',
+      status: 'done',
+      startedAt: Date.now() - 1_000,
+      trigger: {
+        kind: 'issue',
+        workspaceId: workspace.id,
+        issueId: 'daily-risk-scan',
+      },
+    }
+
+    render(
+      <WorkspaceRow
+        workspace={workspace}
+        agents={agents}
+        defaultAgent="pi"
+        selection={null}
+        headlessTasks={[run]}
+        onSelectWorkspace={vi.fn()}
+        onSelectSession={vi.fn()}
+        onSpawn={vi.fn()}
+        onOpenHeadlessRun={onOpenHeadlessRun}
+        onPauseSession={vi.fn()}
+        onResumeSession={vi.fn()}
+        onDeleteSession={vi.fn()}
+        onDelete={vi.fn(async () => undefined)}
+      />,
+    )
+
+    expect(screen.queryByText(run.prompt)).toBeNull()
+    fireEvent.click(screen.getByTitle('Headless runs (automation)'))
+    expect(screen.getByText('Daily Risk Scan')).toBeTruthy()
+    expect(screen.queryByText(run.prompt)).toBeNull()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open this run as an interactive session' }))
+    expect(onOpenHeadlessRun).toHaveBeenCalledWith(
+      workspace.id,
+      run.resumeId,
+      { title: 'Daily Risk Scan' },
+    )
+  })
 })
 
 describe('SessionRow actions', () => {
@@ -150,6 +200,50 @@ describe('SessionRow actions', () => {
     startedAt: 1,
     title: 'Review AAPL earnings',
   }
+
+  it('keeps the Session runtime brand visible independently of lifecycle state', () => {
+    const { rerender } = render(
+      <SessionRow
+        session={{ ...session, agent: 'codex' }}
+        isActive={false}
+        onSelect={vi.fn()}
+        onPause={vi.fn()}
+        onResume={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    )
+
+    const runningCodex = screen.getByRole('button', { name: 'Review AAPL earnings' }).querySelector('[data-agent-runtime-icon="codex"]')
+    expect(runningCodex).toBeTruthy()
+    expect(runningCodex?.parentElement?.className).toContain('text-foreground/80')
+
+    rerender(
+      <SessionRow
+        session={{ ...session, agent: 'codex', state: 'paused', pid: null, startedAt: null }}
+        isActive={false}
+        onSelect={vi.fn()}
+        onPause={vi.fn()}
+        onResume={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    )
+
+    const pausedCodex = screen.getByRole('button', { name: 'Review AAPL earnings' }).querySelector('[data-agent-runtime-icon="codex"]')
+    expect(pausedCodex?.parentElement?.className).toContain('text-foreground/80')
+
+    rerender(
+      <SessionRow
+        session={{ ...session, agent: 'claude' }}
+        isActive={false}
+        onSelect={vi.fn()}
+        onPause={vi.fn()}
+        onResume={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Review AAPL earnings' }).querySelector('[data-agent-runtime-icon="claude"]')).toBeTruthy()
+  })
 
   it('names destructive and lifecycle actions for their target session', async () => {
     const user = userEvent.setup()
@@ -269,6 +363,30 @@ describe('SessionRow actions', () => {
     await user.keyboard('{ArrowDown}')
     fireEvent.click(screen.getByRole('menuitem', { name: 'Archive Review AAPL earnings' }))
     expect(onArchive).toHaveBeenCalledOnce()
+  })
+
+  it('ellipsizes long English and CJK titles without moving row actions', () => {
+    const title = `${'市场扫描'.repeat(12)} and a very long English conversation title about overnight risk`
+    render(
+      <SessionRow
+        session={{ ...session, state: 'paused', pid: null, startedAt: null, title }}
+        displayTitle={title}
+        subtitle="Issue"
+        isActive={false}
+        canDelete={false}
+        onSelect={vi.fn()}
+        onPause={vi.fn()}
+        onResume={vi.fn()}
+        onDelete={vi.fn()}
+      />,
+    )
+
+    const main = screen.getByRole('button', { name: title })
+    expect(main.querySelector('.truncate')?.textContent).toBe(title)
+    expect(screen.getByText('Issue').className).toContain('truncate')
+    const resume = screen.getByRole('button', { name: `Resume ${title}` })
+    expect(resume.className).toContain('oa-icon-action')
+    expect(main.compareDocumentPosition(resume) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   })
 
   it('does not offer Archive while an interactive Session is running', async () => {

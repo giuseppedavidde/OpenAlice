@@ -1,12 +1,14 @@
 interface ToggleProps {
+  id?: string
   checked: boolean
   onChange: (v: boolean) => void
   size?: 'sm' | 'md'
   ariaLabel: string
   disabled?: boolean
+  title?: string
 }
 
-export function Toggle({ checked, onChange, size = 'md', ariaLabel, disabled = false }: ToggleProps) {
+export function Toggle({ id, checked, onChange, size = 'md', ariaLabel, disabled = false, title }: ToggleProps) {
   const track = size === 'sm' ? 'w-8 h-[18px]' : 'w-10 h-[22px]'
   const thumb = size === 'sm' ? 'w-3 h-3 bottom-[2.5px] left-[3px]' : 'w-4 h-4 bottom-[3px] left-[3px]'
   const translate = size === 'sm' ? 'translate-x-[14px]' : 'translate-x-[18px]'
@@ -16,10 +18,12 @@ export function Toggle({ checked, onChange, size = 'md', ariaLabel, disabled = f
 
   return (
     <button
+      id={id}
       type="button"
       role="switch"
       aria-checked={checked}
       aria-label={ariaLabel}
+      title={title}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className={`inline-flex size-10 shrink-0 items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background ${footprint} ${

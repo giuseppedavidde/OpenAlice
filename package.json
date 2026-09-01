@@ -1,8 +1,14 @@
 {
   "name": "open-alice",
-  "version": "0.89.4-beta",
+  "version": "0.91.0-beta.3",
   "description": "File-based trading agent engine",
   "type": "module",
+  "imports": {
+    "#openalice/pty-backend": {
+      "bun": "./src/workspaces/pty-bun.ts",
+      "default": "./src/workspaces/pty-node.ts"
+    }
+  },
   "main": "dist/electron/main.js",
   "scripts": {
     "cli": "node packages/cli/bin/openalice.ts",
@@ -18,7 +24,13 @@
     "build": "turbo run build && tsup src/main.ts --format esm --dts",
     "prebuild:server": "tsx scripts/build-migration-index.ts",
     "build:server": "turbo run build --filter=!@traderalice/desktop --filter=!./packages/uta-broker-* && tsup src/main.ts --format esm --dts",
-    "build:headless-runtime": "tsx scripts/build-headless-runtime.ts",
+    "build:bun-cli:feasibility": "bun scripts/build-bun-cli-feasibility.ts",
+    "build:bun-alice:feasibility": "bun scripts/build-bun-alice-feasibility.ts",
+    "build:bun-runtime:feasibility": "bun scripts/build-bun-runtime-feasibility.ts",
+    "build:bun:release": "bun scripts/build-bun-release.ts",
+    "build:cli-package-channels": "node scripts/build-cli-package-channels.mjs",
+    "pack:cli-npm": "node scripts/pack-cli-npm-packages.mjs",
+    "test:cli-package-manager": "node scripts/cli-package-manager-smoke.mjs",
     "build:migration-index": "tsx scripts/build-migration-index.ts",
     "broker-packs:build": "turbo run build --filter=./packages/uta-broker-* && tsx scripts/build-broker-packs.ts && pnpm broker-packs:verify",
     "broker-packs:upgrade-smoke": "tsx scripts/broker-pack-upgrade-smoke.ts",
@@ -42,6 +54,7 @@
     "vendor:runtime": "node scripts/vendor-managed-runtime.mjs",
     "test": "vitest run",
     "test:cli": "pnpm -F @traderalice/openalice-cli test",
+    "test:platform-contracts": "vitest run --project node packages/cli/src packages/guardian-runtime/src scripts/guardian/shared.spec.ts scripts/pnpm-command.spec.ts scripts/railway-entrypoint.spec.ts services/connector/src/core/io-journal.spec.ts services/uta/src/uta-startup-resilience.spec.ts src/core/windows-workspace-shell.spec.ts src/services/auth/session-store.spec.ts src/services/auth/token-store.spec.ts src/workspaces/adapters/ai-config.spec.ts src/workspaces/adapters/shell.spec.ts src/workspaces/agent-conversation-log.spec.ts src/workspaces/agent-detect.spec.ts src/workspaces/cli/shim.spec.ts src/workspaces/headless-task-win-shim.spec.ts src/workspaces/spawn-env.spec.ts src/workspaces/win-command.spec.ts src/workspaces/workspace-creator.spec.ts",
     "test:watch": "vitest",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "test:uta:live-paper": "vitest run --config vitest.uta-live.config.ts",

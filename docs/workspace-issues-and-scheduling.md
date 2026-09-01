@@ -108,23 +108,25 @@ The filename stem is the stable issue id. Frontmatter:
   `{comment}`. Chat-style Issues (including the Telegram phone desk) set
   `{comment}` alone so the inbound text is the prompt. Empty/null write drops
   the field and restores the default.
-- `telegramConnector: true` — present only on the Alice Project's Telegram
-  phone-desk Issue. Omission is a normal Issue. Any other value is invalid. At
-  most one live desk exists in the Project. Settings → Connectors is the only
-  writer of this flag; generic create/CLI/MCP cannot set it. The board and
-  Tracked list omit the row. What remains the exact scheduled Input Prompt.
-  Comments are the chat transcript. The desk is created with
-  `commentPrompt: '{comment}'` so inbound DMs are the Input Prompt as-is.
-  Owner Telegram DMs become comments. While a desk fire or comment reply is
-  running, later DMs stay in the Connector queue; Alice flushes that stack as
-  one quoted comment when the desk is idle again. Scheduled-fire
-  `assistantText` is stamped as a comment. Connector projects comments that
-  do not contain `[[no-reply]]` and did not arrive from Telegram. While a
-  desk turn is running, it also ships sealed mid-turn `text` blocks — the
-  last consecutive text before a tool or error — and never ships tool I/O.
-  The trailing text stays with the final comment. Projected comments use
-  Telegram MarkdownV2; a parse failure tries `sendRichMessage`, then plain
-  text.
+- `connectorDesk: <adapter id>` — present only on that connector's phone-desk
+  Issue (one live desk per connector, not one desk for the whole Project).
+  Omission is a normal Issue. Settings → Connectors on that adapter card is
+  the only writer; generic create/CLI/MCP cannot set it. The board and
+  Tracked list omit every desk row. What remains the exact scheduled Input
+  Prompt. Comments are that channel's chat transcript. Each desk is created
+  with `commentPrompt: '{comment}'` so inbound DMs are the Input Prompt as-is.
+  Owner DMs for that connector become comments on that Issue. While that desk
+  is generating, later DMs for the same connector stay in the Connector
+  queue; other connectors flush independently. Scheduled-fire
+  `assistantText` is stamped as a comment. Scheduler and Run now / Retry now
+  executions of this Issue carry `trigger.metadata.kind: connector-cron-issue`.
+  Only comments and progress from a run with that metadata consume
+  `[[no-reply]]`; ordinary chat mentions of the syntax are delivered as text.
+  Connector does not echo comments that arrived from that connector.
+  While a desk turn is running, it also ships sealed mid-turn `text` blocks —
+  the last consecutive text before a tool or error — and never ships tool I/O.
+  The trailing text stays with the final comment. Shipped
+  `telegramConnector: true` files are read as `connectorDesk: telegram`.
 
 `agent`, `credential`/`credentialSource`, `model`, and `effort` are one Session-creation tuple.
 Only the credential slug is persisted; endpoint and key material remain in the
@@ -220,6 +222,14 @@ accepted and later failed; that occurrence stays one attempt and uses
 
 ## Agent and Human Surfaces
 
+Ask Alice, Auto Quant, and Auto Prediction share one Session roster policy.
+Sessions currently owned by an exact Issue assignee, plus Sessions actively
+executing an Issue, stay on Issue and Automation surfaces by default. Settings
+→ Harness may opt them into the shared roster independently from the separate
+headless-born Session preference. Connector-desk Sessions remain hidden
+regardless of either preference because they are transport-owned rather than
+ordinary coworkers.
+
 Agents normally use:
 
 ```bash
@@ -285,7 +295,8 @@ by that Workspace; otherwise dispatch fails with an actionable message instead
 of mutating provider registration during a concurrent run.
 
 The Issue API also derives an `automationHealth` projection from these markers,
-the latest scheduled run, and the assignee's resume availability. It is not
+the latest scheduled run, the assignee's resume availability, and the effective
+Agent runtime installed on the current host. It is not
 persisted in markdown and does not create another Issue workflow status:
 
 - `not_started`, `due`, `running`, and `healthy` describe normal progress;
@@ -294,8 +305,11 @@ persisted in markdown and does not create another Issue workflow status:
   launcher suspension); this is operational interruption, not an agent-work failure;
 - `failed` retains a real timeout, launch error, runtime error, or non-zero
   process exit until a later success;
-- `blocked` means the schedule has no future fire, or an exact Session owner is
-  missing, retired, or not resumable;
+- `blocked` means the schedule has no future fire, an exact Session owner is
+  missing, retired, deleted, or not resumable, or the effective Agent runtime
+  is not installed. Runtime absence is exposed as the structured blocker
+  `agent_runtime_missing`; this read path performs only cheap executable
+  discovery and never starts a readiness probe or Agent;
 - `inactive` means Issue status `done`/`canceled` has stopped the schedule.
 
 Health measures scheduler fulfillment, not human attention. A successful run
