@@ -4,7 +4,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { InboxNotification } from '@traderalice/connector-protocol'
-import { MAX_CONNECTOR_ATTACHMENT_BYTES } from '@traderalice/connector-protocol'
+import {
+  MAX_CONNECTOR_ATTACHMENT_BYTES,
+  MAX_CONNECTOR_ATTACHMENTS,
+} from '@traderalice/connector-protocol'
 import { createMemoryInboxStore } from '../../core/inbox-store.js'
 import {
   attachInboxConnectorBridge,
@@ -290,5 +293,105 @@ describe('projectInboxDoc', () => {
     if (!result.ok) return
     expect(Buffer.from(result.attachment.contentBase64, 'base64')).toEqual(source)
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('encoding unchanged'))
+  })
+})
+
+describe('binary attachment projection', () => {
+  it('delivers recognized image and document files with explicit media types and raw bytes', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'openalice-connector-binary-'))
+    tempDirs.push(root)
+    const png = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x01, 0x02])
+    const pdf = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31, 0x2e, 0x34])
+    const jpg = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10])
+    await writeFile(join(root, 'chart.png'), png)
+    await writeFile(join(root, 'scan.pdf'), pdf)
+    await writeFile(join(root, 'photo.jpg'), jpg)
+
+    const attachments = await projectInboxAttachments({
+      id: 'entry-binary',
+      ts: Date.now(),
+      workspaceId: 'ws-1',
+      docs: [{ path: 'chart.png' }, { path: 'scan.pdf' }, { path: 'photo.jpg' }],
+    }, () => ({ dir: root }))
+
+    expect(attachments.map((projection) => [projection.sourcePath, projection.attachment.mediaType]))
+      .toEqual([
+        ['chart.png', 'image/png'],
+        ['scan.pdf', 'application/pdf'],
+        ['photo.jpg', 'image/jpeg'],
+      ])
+    expect(Buffer.from(attachments[0]!.attachment.contentBase64, 'base64')).toEqual(png)
+    expect(Buffer.from(attachments[1]!.attachment.contentBase64, 'base64')).toEqual(pdf)
+    expect(Buffer.from(attachments[2]!.attachment.contentBase64, 'base64')).toEqual(jpg)
+  })
+
+  it('delivers plain text files through the encoding-normalized path with a charset', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'openalice-connector-txt-'))
+    tempDirs.push(root)
+    await writeFile(join(root, 'notes.txt'), 'hello world\n')
+
+    const attachments = await projectInboxAttachments({
+      id: 'entry-txt',
+      ts: Date.now(),
+      workspaceId: 'ws-1',
+      docs: [{ path: 'notes.txt' }],
+    }, () => ({ dir: root }))
+
+    expect(attachments).toHaveLength(1)
+    expect(attachments[0]!.attachment.mediaType).toBe('text/plain; charset=utf-8')
+    expect(Buffer.from(attachments[0]!.attachment.contentBase64, 'base64').subarray(3).toString('utf8'))
+      .toBe('hello world\n')
+  })
+
+  it('excludes unsupported file extensions from the attachment set', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'openalice-connector-unsupported-'))
+    tempDirs.push(root)
+    await writeFile(join(root, 'archive.zip'), Buffer.from([0x50, 0x4b, 0x03, 0x04]))
+
+    const attachments = await projectInboxAttachments({
+      id: 'entry-unsupported',
+      ts: Date.now(),
+      workspaceId: 'ws-1',
+      docs: [{ path: 'archive.zip' }],
+    }, () => ({ dir: root }))
+
+    expect(attachments).toEqual([])
+  })
+
+  it('caps the attachment set at MAX_CONNECTOR_ATTACHMENTS and warns', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'openalice-connector-cap-'))
+    tempDirs.push(root)
+    const docs = Array.from({ length: MAX_CONNECTOR_ATTACHMENTS + 1 }, (_, index) => ({
+      path: `report-${index}.md`,
+    }))
+    await Promise.all(docs.map((doc) => writeFile(join(root, doc.path), `# report ${doc.path}\n`)))
+    const warn = vi.fn()
+
+    const attachments = await projectInboxAttachments({
+      id: 'entry-cap',
+      ts: Date.now(),
+      workspaceId: 'ws-1',
+      docs,
+    }, () => ({ dir: root }), warn)
+
+    expect(attachments).toHaveLength(MAX_CONNECTOR_ATTACHMENTS)
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('attachment limit'))
+  })
+
+  it('skips a binary file above the one-megabyte cap with a warning', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'openalice-connector-binary-large-'))
+    tempDirs.push(root)
+    await writeFile(join(root, 'huge.png'), Buffer.alloc(MAX_CONNECTOR_ATTACHMENT_BYTES + 1, 0x00))
+    const warn = vi.fn()
+
+    const attachments = await projectInboxAttachments({
+      id: 'entry-binary-large',
+      ts: Date.now(),
+      workspaceId: 'ws-1',
+      docs: [{ path: 'huge.png' }],
+    }, () => ({ dir: root }), warn)
+
+    expect(attachments).toEqual([])
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('file exceeds'))
   })
 })

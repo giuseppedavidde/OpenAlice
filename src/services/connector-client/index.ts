@@ -15,10 +15,11 @@ import {
 import type { InboxDoc, InboxEntry, IInboxStore } from '../../core/inbox-store.js'
 import { readConnectorServiceEnabled } from '../../core/connector-config.js'
 import { probeOptionalCarrier } from '../optional-carrier/health.js'
+import { normalizeConnectorTextAttachment } from './text-attachment.js'
 import {
-  normalizeConnectorTextAttachment,
-  type ConnectorTextMediaType,
-} from './text-attachment.js'
+  attachmentMediaTypeForPath,
+  type ConnectorAttachmentMediaType,
+} from './attachment-types.js'
 
 export interface ConnectorBridgeHealth {
   enabled: boolean
@@ -191,18 +192,20 @@ export function toNotification(
   }
 }
 
-/** Project Inbox's live text-report pointers into bounded, verified file
- * bytes before crossing the process boundary. Unsupported or unavailable files
- * remain listed in the text notification and never block the durable Inbox
- * append or the remaining external message. */
+/** Project Inbox's live report and media pointers into bounded, verified file
+ * bytes before crossing the process boundary. Text reports are encoding
+ * normalized; recognized binary files (images, PDFs, office documents, data
+ * files) cross as raw bytes under their explicit media type. Unsupported or
+ * unavailable files remain listed in the text notification and never block
+ * the durable Inbox append or the remaining external message. */
 export async function projectInboxAttachments(
   entry: InboxEntry,
   resolveWorkspace: InboxConnectorBridgeDeps['resolveWorkspace'],
   warn: (message: string) => void = () => undefined,
 ): Promise<InboxAttachmentProjection[]> {
-  const reportDocs: Array<{ doc: InboxDoc; mediaType: ConnectorTextMediaType }> = []
+  const reportDocs: Array<{ doc: InboxDoc; mediaType: ConnectorAttachmentMediaType }> = []
   for (const doc of entry.docs ?? []) {
-    const mediaType = textMediaTypeForPath(doc.path)
+    const mediaType = attachmentMediaTypeForPath(doc.path)
     if (mediaType) reportDocs.push({ doc, mediaType })
   }
   if (reportDocs.length === 0 || !resolveWorkspace) return []
@@ -215,9 +218,9 @@ export async function projectInboxAttachments(
 
   const projections: InboxAttachmentProjection[] = []
   const usedNames = new Set<string>()
-  for (const { doc } of reportDocs.slice(0, MAX_CONNECTOR_ATTACHMENTS)) {
+  for (const { doc, mediaType } of reportDocs.slice(0, MAX_CONNECTOR_ATTACHMENTS)) {
     try {
-      projections.push(await materializeWorkspaceDoc(workspaceRoot.root, doc.path, usedNames, warn))
+      projections.push(await materializeWorkspaceDoc(workspaceRoot.root, doc.path, mediaType, usedNames, warn))
     } catch (error) {
       warn(`Inbox attachment skipped (${doc.path}): ${message(error)}`)
     }
@@ -260,7 +263,13 @@ export async function projectInboxDoc(
     }
   }
   try {
-    const projection = await materializeWorkspaceDoc(workspaceRoot.root, doc.path, new Set(), warn)
+    const projection = await materializeWorkspaceDoc(
+      workspaceRoot.root,
+      doc.path,
+      attachmentMediaTypeForPath(doc.path),
+      new Set(),
+      warn,
+    )
     return { ok: true, sourcePath: projection.sourcePath, attachment: projection.attachment }
   } catch (error) {
     const reason = classifyMaterializeError(error)
@@ -287,6 +296,7 @@ async function resolveWorkspaceRoot(
 async function materializeWorkspaceDoc(
   workspaceRoot: string,
   relativePath: string,
+  mediaType: ConnectorAttachmentMediaType | undefined,
   usedNames: Set<string>,
   warn: (message: string) => void,
 ): Promise<InboxAttachmentProjection> {
@@ -298,13 +308,12 @@ async function materializeWorkspaceDoc(
   }
   const content = await readFile(target)
   const sourceDigest = createHash('sha256').update(content).digest('hex')
-  const textType = textMediaTypeForPath(relativePath)
   let deliveryBytes: Buffer = content
-  let mediaType = 'application/octet-stream'
+  let deliveryMediaType = mediaType?.mediaType ?? 'application/octet-stream'
   let detectedEncoding: string | undefined
   let detectionConfidence: number | undefined
-  if (textType) {
-    const delivery = normalizeConnectorTextAttachment(content, textType)
+  if (mediaType?.kind === 'text') {
+    const delivery = normalizeConnectorTextAttachment(content, mediaType.mediaType)
     if (delivery.warning) warn(`Inbox attachment encoding unchanged (${relativePath}): ${delivery.warning}`)
     if (delivery.content.byteLength > MAX_CONNECTOR_ATTACHMENT_BYTES) {
       throw Object.assign(
@@ -313,7 +322,7 @@ async function materializeWorkspaceDoc(
       )
     }
     deliveryBytes = delivery.content
-    mediaType = delivery.mediaType
+    deliveryMediaType = delivery.mediaType
     detectedEncoding = delivery.detectedEncoding
     detectionConfidence = delivery.detectionConfidence
   }
@@ -322,7 +331,7 @@ async function materializeWorkspaceDoc(
     sourcePath: relativePath,
     attachment: {
       filename,
-      mediaType,
+      mediaType: deliveryMediaType,
       sizeBytes: deliveryBytes.byteLength,
       contentSha256: createHash('sha256').update(deliveryBytes).digest('hex'),
       source: {
@@ -334,13 +343,6 @@ async function materializeWorkspaceDoc(
       contentBase64: deliveryBytes.toString('base64'),
     },
   }
-}
-
-function textMediaTypeForPath(path: string): ConnectorTextMediaType | undefined {
-  const extension = extname(path).toLowerCase()
-  if (extension === '.md' || extension === '.markdown') return 'text/markdown'
-  if (extension === '.html') return 'text/html'
-  return undefined
 }
 
 function classifyMaterializeError(error: unknown): ConnectorArtifactFailureReason {

@@ -17,7 +17,7 @@ export interface NormalizedTextAttachment {
   warning?: string
 }
 
-export type ConnectorTextMediaType = 'text/markdown' | 'text/html'
+export type ConnectorTextMediaType = 'text/markdown' | 'text/html' | 'text/plain'
 
 /**
  * Normalize an external text attachment without changing the Workspace file.
