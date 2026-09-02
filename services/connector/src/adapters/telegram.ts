@@ -26,6 +26,7 @@ import {
   DEFAULT_CONNECTION_ATTEMPT_TIMEOUT_MS,
   DEFAULT_CONNECTION_RETRY_DELAY_MS,
   decodeConnectorAttachment,
+  decodeInboxAttachments,
   formatAdapterError,
   formatInboxNotification,
   formatPlainInboxNotification,
@@ -175,6 +176,13 @@ export class TelegramConnectorAdapter implements ConnectorAdapter {
         formatPlainInboxNotification(notification),
         formatTelegramInboxMarkdownV2(notification),
       )
+      for (const attachment of decodeInboxAttachments(notification)) {
+        await this.bot.api.sendDocument(
+          this.chatId,
+          new InputFile(attachment.content, attachment.filename),
+          { caption: truncateTelegramText(`File: ${attachment.filename}`, 200) },
+        )
+      }
       this.tracker.success(this.ownerUserId)
     } catch (error) {
       this.tracker.degraded(error)

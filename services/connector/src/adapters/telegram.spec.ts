@@ -373,7 +373,6 @@ describe('Telegram rich outbound text', () => {
   it('sends Inbox notifications as rich GFM', async () => {
     const adapter = new TelegramConnectorAdapter({ attemptTimeoutMs: 200, reconnectDelayMs: 20 })
     await startUntilReady(adapter, { botToken: 'token', ownerUserId: '42', chatId: '99' })
-    const attachment = Buffer.from('# Close scan\n')
     const notification: InboxNotification = {
       id: 'inbox-1',
       createdAt: '2026-07-13T00:00:00.000Z',
@@ -383,13 +382,6 @@ describe('Telegram rich outbound text', () => {
       body: 'Three **findings**.',
       provenance: { resumeId: 'resume-calm-river-12ab' },
       href: 'https://openalice.example/inbox',
-      attachments: [{
-        filename: 'close.md',
-        mediaType: 'text/markdown; charset=utf-8',
-        sizeBytes: attachment.byteLength,
-        contentSha256: createHash('sha256').update(attachment).digest('hex'),
-        contentBase64: attachment.toString('base64'),
-      }],
     }
 
     await adapter.deliver(notification)
@@ -399,6 +391,58 @@ describe('Telegram rich outbound text', () => {
     })
     expect(sendMessage).not.toHaveBeenCalled()
     expect(sendDocument).not.toHaveBeenCalled()
+    await adapter.stop()
+  })
+
+  it('sends Inbox attachments as Telegram documents', async () => {
+    const adapter = new TelegramConnectorAdapter({ attemptTimeoutMs: 200, reconnectDelayMs: 20 })
+    await startUntilReady(adapter, { botToken: 'token', ownerUserId: '42', chatId: '99' })
+    const first = Buffer.from('# Close scan\n')
+    const second = Buffer.from('# AMD daily\n')
+    const notification: InboxNotification = {
+      id: 'inbox-2',
+      createdAt: '2026-07-13T00:00:00.000Z',
+      workspaceId: 'ws-1',
+      workspaceLabel: 'Research desk',
+      title: 'Close scan',
+      body: 'Findings.',
+      provenance: { resumeId: 'resume-calm-river-12ab' },
+      href: 'https://openalice.example/inbox',
+      attachments: [
+        {
+          filename: 'close.md',
+          mediaType: 'text/markdown; charset=utf-8',
+          sizeBytes: first.byteLength,
+          contentSha256: createHash('sha256').update(first).digest('hex'),
+          contentBase64: first.toString('base64'),
+        },
+        {
+          filename: 'amd-daily.md',
+          mediaType: 'text/markdown; charset=utf-8',
+          sizeBytes: second.byteLength,
+          contentSha256: createHash('sha256').update(second).digest('hex'),
+          contentBase64: second.toString('base64'),
+        },
+      ],
+    }
+
+    await adapter.deliver(notification)
+
+    expect(sendRichMessage).toHaveBeenCalledWith('99', {
+      markdown: formatInboxNotification(notification),
+    })
+    expect(sendDocument).toHaveBeenCalledTimes(2)
+    expect(sendDocument).toHaveBeenCalledWith(
+      '99',
+      expect.any(Object),
+      { caption: 'File: close.md' },
+    )
+    expect(sendDocument).toHaveBeenCalledWith(
+      '99',
+      expect.any(Object),
+      { caption: 'File: amd-daily.md' },
+    )
+    expect(sendMessage).not.toHaveBeenCalled()
     await adapter.stop()
   })
 
