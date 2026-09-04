@@ -9,6 +9,7 @@ import {
   removeManagedPathBlock,
   removeMatchingBlocks,
   runUninstallCommand,
+  windowsUninstallBootstrap,
 } from './uninstall.mjs'
 
 const temporaryPaths = []
@@ -18,6 +19,17 @@ afterEach(async () => {
 })
 
 describe('OpenAlice CLI uninstall', () => {
+  it('uses an awaited cmd/start bootstrap and quotes Windows shell metacharacters', () => {
+    const root = 'C:\\Alice & Co'
+    const command = windowsUninstallBootstrap('C:\\Windows\\powershell.exe', root + '\\.cli-uninstall.ps1', root, 1234)
+    expect(command).toContain('start "" /b "C:\\Windows\\powershell.exe"')
+    expect(command).toContain('-InstallDir "C:\\Alice & Co"')
+    expect(command).toContain('-WaitForPid 1234 -Yes')
+    expect(command).toContain('-ExecutionPolicy RemoteSigned')
+    for (const path of ['C:\\%TEMP%', 'C:\\bad!path', 'C:\\bad"path', 'C:\\bad\npath']) {
+      expect(() => windowsUninstallBootstrap('powershell.exe', path, path, 1234)).toThrow('Unsupported')
+    }
+  })
   it('removes only the managed PATH block for this install root', () => {
     const content = `before
 # >>> OpenAlice CLI >>>
@@ -84,24 +96,6 @@ after
     })).resolves.toBe(0)
     expect(output.join('')).toContain(join(layout.installRoot, 'workspaces'))
     await expect(access(layout.versionsDir)).resolves.toBeUndefined()
-  })
-
-  it('preserves fallback releases when Railway owns the install root', async () => {
-    const root = await makeTempDir()
-    const layout = await makeInstalledLayout(root)
-    const output = []
-
-    await expect(runUninstallCommand(['--yes'], {
-      layout,
-      env: { OPENALICE_SERVICE_MANAGER: 'railway' },
-      profiles: [],
-      stdout: { write: (value) => output.push(value) },
-      stdin: { isTTY: false },
-    })).resolves.toBe(0)
-
-    await expect(access(layout.versionsDir)).resolves.toBeUndefined()
-    expect(output.join('')).toContain('retained fallback releases')
-    expect(output.join('')).toContain('did not modify')
   })
 
   it('routes package-managed removal back to the owning manager', async () => {

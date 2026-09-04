@@ -15,20 +15,20 @@ import {
 } from './ui-layout'
 
 describe('ui-layout document', () => {
-  it('covers every catalog page and hides Dev by default', () => {
+  it('covers every catalog page and starts with no hidden entries', () => {
     const catalogPages = NAV_SECTIONS.flatMap((section) => section.items.map((item) => item.page))
     expect(new Set(catalogPages)).toEqual(new Set(ACTIVITY_PAGE_IDS))
-    expect(defaultUiLayout().hidden).toEqual(['dev'])
+    expect(defaultUiLayout().hidden).toEqual([])
     expect(defaultUiLayout().hidden).not.toContain(PINNED_ACTIVITY_PAGE)
   })
 
-  it('keeps Settings visible and restores missing catalog pages', () => {
+  it('keeps Chat visible, drops retired Settings and Dev state, and restores missing catalog pages', () => {
     const layout = normalizeUiLayout({
       version: 1,
       groups: [{ id: 'primary', items: ['chat'] }],
       hidden: ['settings', 'dev'],
     })
-    expect(layout.hidden).toEqual(['dev'])
+    expect(layout.hidden).toEqual([])
     expect(layout.groups.flatMap((group) => group.items)).toEqual(expect.arrayContaining([...ACTIVITY_PAGE_IDS]))
   })
 
@@ -45,9 +45,9 @@ describe('ui-layout document', () => {
     expect(layout.groups.find((group) => group.id === 'primary')?.items).toContain('chat')
   })
 
-  it('cannot hide Settings', () => {
-    const layout = setPageHidden(defaultUiLayout(), 'settings', true)
-    expect(layout.hidden).not.toContain('settings')
+  it('cannot hide Chat', () => {
+    const layout = setPageHidden(defaultUiLayout(), 'chat', true)
+    expect(layout.hidden).not.toContain('chat')
   })
 
   it('drops a retired news rail entry from persisted layouts', () => {
@@ -58,7 +58,7 @@ describe('ui-layout document', () => {
     })
     expect(layout.groups.find((group) => group.id === 'primary')?.items).not.toContain('news')
     expect(layout.hidden).not.toContain('news')
-    expect(layout.hidden).toEqual(['dev'])
+    expect(layout.hidden).toEqual([])
   })
 
   it('drops a retired trading-as-git rail entry from persisted layouts', () => {
@@ -74,6 +74,6 @@ describe('ui-layout document', () => {
       'prediction',
     ])
     expect(layout.hidden).not.toContain('trading-as-git')
-    expect(layout.hidden).toEqual(['dev'])
+    expect(layout.hidden).toEqual([])
   })
 })

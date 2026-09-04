@@ -48,9 +48,9 @@ import { HarnessSurfacePage } from '../pages/HarnessSurfacePage'
 import { TrackedSidebar } from '../components/TrackedSidebar'
 import { WorkspacesSidebar } from '../components/workspace/WorkspacesSidebar'
 import { SettingsCategoryList } from '../components/SettingsCategoryList'
-import { DevCategoryList } from '../components/DevCategoryList'
 import { MarketSidebar } from '../components/MarketSidebar'
 import { PortfolioSidebar } from '../components/PortfolioSidebar'
+import { PageContentLayout } from '../components/PageTopBar'
 import { AutomationSidebar } from '../components/AutomationSidebar'
 import { getDesignProject } from '../design/projects'
 
@@ -159,7 +159,7 @@ const issueDetailModule: ViewModule<'issue-detail'> = {
   title: (spec) => spec.params.id,
   toUrl: (spec) =>
     `/issues/${encodeURIComponent(spec.params.wsId)}/${encodeURIComponent(spec.params.id)}`,
-  Component: ({ spec }) => <IssueDetailPage spec={spec} />,
+  Component: ({ spec }) => <PageContentLayout title={spec.params.id}><IssueDetailPage spec={spec} /></PageContentLayout>,
 }
 
 const trackedIssueDetailModule: ViewModule<'tracked-issue-detail'> = {
@@ -207,7 +207,7 @@ const officeModule: ViewModule<'office'> = {
   kind: 'office',
   title: () => 'Office',
   toUrl: () => '/office',
-  Component: () => <OfficePage />,
+  Component: () => <PageContentLayout title="Office"><OfficePage /></PageContentLayout>,
 }
 
 function MarketArea({ children }: { children: ReactNode }) {
@@ -378,13 +378,14 @@ const devTabTitle: Record<Extract<ViewSpec, { kind: 'dev' }>['params']['tab'], s
 const devModule: ViewModule<'dev'> = {
   kind: 'dev',
   title: (spec) => devTabTitle[spec.params.tab],
-  toUrl: (spec) => `/dev/${spec.params.tab}`,
+  toUrl: (spec) => `/settings/developer/${spec.params.tab}`,
   Component: (props) => (
     <PageSidebarShell
-      storageKey="dev"
-      titleKey="nav.item.dev"
+      storageKey="settings"
+      titleKey="nav.item.settings"
       defaultWidth={220}
-      sidebar={<DevCategoryList />}
+      desktopMinWidth={960}
+      sidebar={({ closeMobileDrawer }) => <SettingsCategoryList onSelect={closeMobileDrawer} />}
     >
       <DevPage {...props} />
     </PageSidebarShell>

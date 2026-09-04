@@ -220,16 +220,13 @@
   color: var(--muted-foreground);
   font-size: 10px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
-.resume-cta-state-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.72;
+.resume-cta-name-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
 }
 
 .resume-cta-name {
@@ -268,8 +265,6 @@
   color: var(--muted-foreground);
   font-size: 9px;
   font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .resume-cta-runtime-fact dd {
@@ -344,8 +339,6 @@
   border-radius: 999px;
   font-size: 8px;
   line-height: 1.2;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
   opacity: 0.58;
 }
 .resume-cta-btn:hover:not(:disabled) {
@@ -527,7 +520,7 @@
    * that view's titlebar, leave the titlebar exposed so its Files toggle can
    * close the overlay again. */
   .workspace-page-shell.is-terminal-canvas .workspace-side {
-    inset-block-start: 37px;
+    inset-block-start: 0;
   }
 }
 
@@ -776,12 +769,7 @@
   height: 28px;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
-  background: var(--muted);
   color: var(--muted-foreground);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 11px;
-  font-weight: 600;
 }
 
 .workspace-session-row-copy {
@@ -814,12 +802,6 @@
   white-space: nowrap;
 }
 
-.workspace-session-row-meta > span + span::before {
-  content: "·";
-  margin-right: 6px;
-  color: color-mix(in srgb, var(--muted-foreground) 48%, transparent);
-}
-
 .workspace-session-state {
   display: inline-flex;
   align-items: center;
@@ -830,16 +812,11 @@
   color: var(--muted-foreground);
   font-size: 9.5px;
   font-weight: 600;
-  letter-spacing: 0.025em;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
-.workspace-session-state > span {
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--muted-foreground);
+.workspace-session-state > svg {
+  flex: 0 0 auto;
 }
 
 .workspace-session-state.is-running {
@@ -1006,8 +983,6 @@
 }
 
 .panel-title {
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
   font-weight: 600;
   color: var(--foreground);
 }
@@ -1259,78 +1234,6 @@ button.files-row:focus-visible {
   box-shadow: 0 10px 30px color-mix(in srgb, var(--shadow-color) 35%, transparent);
 }
 
-.terminal-header {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  overflow: hidden;
-  gap: 10px;
-  padding: 8px 12px;
-  background: linear-gradient(180deg, var(--muted), var(--secondary));
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  color: var(--muted-foreground);
-  user-select: none;
-}
-
-.terminal-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--foreground);
-  font-weight: 600;
-  letter-spacing: 0.2px;
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-}
-
-.terminal-meta {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-left: auto;
-  font-variant-numeric: tabular-nums;
-}
-
-.terminal-title-separator {
-  flex: 0 0 auto;
-  color: var(--muted-foreground);
-}
-
-.terminal-session-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--muted-foreground);
-  font-family: ui-monospace, "SF Mono", Menlo, monospace;
-  font-size: 11px;
-}
-
-.terminal-header-actions {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 4px;
-}
-
-.terminal-header-action {
-  height: 24px;
-  padding: 0 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--secondary);
-  color: var(--foreground);
-  font-size: 11px;
-  line-height: 22px;
-}
-
-.terminal-header-action:hover {
-  border-color: var(--primary);
-  color: var(--primary);
-}
-
 /* A pinned terminal is the Workspace page's primary canvas, not a card inside
  * another card. Its titlebar absorbs the Workspace actions and its shell runs
  * edge-to-edge; the remaining borders describe actual pane splits. */
@@ -1349,20 +1252,6 @@ button.files-row:focus-visible {
   box-shadow: none;
 }
 
-.terminal-shell.is-canvas .terminal-header {
-  padding-block: 6px;
-  background: var(--secondary);
-}
-
-@container (max-width: 680px) {
-  .terminal-shell.is-canvas .terminal-meta {
-    display: none;
-  }
-
-  .terminal-shell.is-canvas .terminal-session-title {
-    flex: 1 1 auto;
-  }
-}
 
 .status-dot {
   width: 8px;
@@ -1443,23 +1332,6 @@ button.files-row:focus-visible {
     var(--background);
 }
 
-.webpi-header {
-  width: 100%;
-  min-width: 0;
-  min-height: 58px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 10px 18px;
-  border-bottom: 1px solid var(--border);
-  background: color-mix(in srgb, var(--secondary) 72%, transparent);
-}
-
-.webpi-header > div:first-child { min-width: 0; }
-.webpi-title { font-size: 13px; font-weight: 650; }
-.webpi-title span { margin-left: 7px; color: var(--muted-foreground); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; }
-.webpi-subtitle { margin-top: 2px; color: var(--muted-foreground); font-size: 10px; }
 .webpi-phase { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted-foreground); font-size: 10px; text-transform: capitalize; }
 .webpi-phase.is-working, .webpi-phase.is-retrying, .webpi-phase.is-compacting { color: var(--primary); }
 .webpi-phase.is-failed { color: var(--destructive); }
@@ -1581,7 +1453,7 @@ button.files-row:focus-visible {
 .webpi-tool-step > summary .webpi-disclosure { margin-left: 0; }
 .webpi-step-detail { display: grid; gap: 9px; margin: 0 0 8px 26px; padding: 9px 10px; border: 1px solid color-mix(in srgb, var(--border) 76%, transparent); border-radius: 8px; background: color-mix(in srgb, var(--background) 64%, transparent); }
 .webpi-step-detail section { min-width: 0; }
-.webpi-step-detail h4 { margin: 0 0 5px; color: var(--muted-foreground); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.webpi-step-detail h4 { margin: 0 0 5px; color: var(--muted-foreground); font-size: 9px; font-weight: 700; }
 .webpi-step-detail pre { max-height: 230px; margin: 0; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; color: color-mix(in srgb, var(--foreground) 88%, var(--muted-foreground)); font: 10px/1.5 var(--font-mono, monospace); }
 .webpi-step-result { max-height: 320px; overflow: auto; font-size: 11px; }
 
@@ -1632,11 +1504,6 @@ button.files-row:focus-visible {
 }
 
 @container webpi (max-width: 460px) {
-  .webpi-header { min-height: 54px; gap: 8px; padding: 9px 12px; }
-  .webpi-title,
-  .webpi-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .webpi-title span { display: block; margin: 1px 0 0; }
-  .webpi-subtitle { display: none; }
   .webpi-messages { padding-top: 18px; }
   .webpi-message { margin-bottom: 20px; }
   .webpi-activity > summary { gap: 6px; padding-inline: 8px; }

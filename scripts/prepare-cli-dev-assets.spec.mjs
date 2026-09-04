@@ -1,12 +1,13 @@
 import { createHash } from 'node:crypto'
 import { execFile } from 'node:child_process'
-import { chmod, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { access, chmod, mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { promisify } from 'node:util'
 
 import { afterEach, describe, expect, it } from 'vitest'
 
+import { cliExecutableName } from '../packages/cli/src/release-targets.mjs'
 import { bunReleaseContentIdentity } from './bun-release-content-identity.mjs'
 import { prepareCliDevAssets } from './prepare-cli-dev-assets.mjs'
 
@@ -20,7 +21,12 @@ afterEach(async () => {
 })
 
 describe.skipIf(process.platform === 'win32')('CLI dev channel assets', () => {
-  it('validates all four native candidates and preserves their exact archive bytes', async () => {
+  it('accepts checksum-bound Windows metadata larger than the default subprocess buffer', async () => {
+    const root = await fixture({ largeWindowsMetadata: true })
+    const manifest = prepareCliDevAssets({ inputDir: join(root, 'input'), outputDir: join(root, 'output'), commit, version, installerPath: join(root, 'install') })
+    expect(manifest.additionalTargets).toHaveLength(2)
+  })
+  it('validates all four native candidates and prepares immutable bytes plus a compatibility receipt', async () => {
     const root = await fixture()
     const output = join(root, 'output')
     const manifest = prepareCliDevAssets({
@@ -32,21 +38,25 @@ describe.skipIf(process.platform === 'win32')('CLI dev channel assets', () => {
     })
 
     expect(manifest.targets).toHaveLength(4)
+    expect(manifest.additionalTargets).toHaveLength(2)
+    expect(manifest.windowsInstaller.versionedUrl).toBe(`https://download.openalice.ai/cli/dev/releases/${commit}/install.ps1`)
     expect(manifest.targets.map(({ platform, arch }) => `${platform}-${arch}`).sort()).toEqual([
       'darwin-arm64',
       'darwin-x64',
       'linux-arm64',
       'linux-x64',
     ])
-    for (const target of manifest.targets) {
+    for (const target of [...manifest.targets, ...manifest.additionalTargets]) {
       const versioned = `openalice-cli-${version}-${target.platform}-${target.arch}.tar.gz`
       const alias = `openalice-cli-dev-${target.platform}-${target.arch}.tar.gz`
       expect(await readFile(join(output, 'releases', commit, versioned))).toEqual(
-        await readFile(join(output, 'aliases', alias)),
+        await readFile(join(root, 'input', versioned)),
       )
+      await expect(access(join(output, 'aliases', alias))).rejects.toMatchObject({ code: 'ENOENT' })
       expect(await readFile(join(output, 'aliases', `${alias}.sha256`), 'utf8')).toBe(
         `${target.sha256}  ${alias}\n`,
       )
+      expect(target.archive).toBe(alias)
     }
     expect(await readFile(join(output, 'releases', commit, 'install'), 'utf8'))
       .toBe('#!/usr/bin/env bash\n')
@@ -83,7 +93,7 @@ describe.skipIf(process.platform === 'win32')('CLI dev channel assets', () => {
   })
 })
 
-async function fixture({ tamperedIdentityTarget } = {}) {
+async function fixture({ tamperedIdentityTarget, largeWindowsMetadata = false } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'openalice-cli-dev-assets-'))
   temporaryPaths.push(root)
   const input = join(root, 'input')
@@ -94,11 +104,13 @@ async function fixture({ tamperedIdentityTarget } = {}) {
     ['darwin', 'x64'],
     ['linux', 'arm64'],
     ['linux', 'x64'],
+    ['win32', 'arm64'],
+    ['win32', 'x64'],
   ]) {
     const releaseName = `openalice-cli-${version}-${platform}-${arch}`
     const releaseRoot = join(root, releaseName)
     await mkdir(join(releaseRoot, 'bin'), { recursive: true })
-    const executable = join(releaseRoot, 'bin', 'openalice')
+    const executable = join(releaseRoot, 'bin', cliExecutableName(platform))
     const executableBytes = Buffer.from('#!/bin/sh\n')
     await writeFile(executable, executableBytes)
     await chmod(executable, 0o755)
@@ -109,10 +121,11 @@ async function fixture({ tamperedIdentityTarget } = {}) {
       platform,
       arch,
       bunVersion: '1.4.0',
-      executable: 'bin/openalice',
+      executable: `bin/${cliExecutableName(platform)}`,
       resourceRoot: 'share/openalice',
+      ...(largeWindowsMetadata && platform === 'win32' ? { fixtureNotes: 'x'.repeat(1100 * 1024) } : {}),
       files: [{
-        path: 'bin/openalice',
+        path: `bin/${cliExecutableName(platform)}`,
         type: 'file',
         bytes: executableBytes.length,
         mode: 0o755,

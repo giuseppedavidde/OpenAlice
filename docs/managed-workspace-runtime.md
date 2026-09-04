@@ -484,9 +484,9 @@ running version, normalized channel, and update owner on every distribution
 surface. The backend derives that state from installed provenance and the
 runtime profile rather than guessing from package semver. A source checkout
 uses Git, packaged Electron uses its native updater, a directly installed
-stable or beta CLI uses `openalice update` as its entry point (with that command
-handing package-manager installs back to their manager), and Railway or Docker
-remains owned by its service deployment. Pinned and custom installs have no
+  stable or beta CLI uses `openalice update` as its entry point (with that command
+  handing package-manager installs back to their manager), and Docker remains
+  owned by its service deployment. Pinned and custom installs have no
 implicit updater.
 Invalid installed provenance fails closed as custom/non-updating instead of
 silently falling back to a stable package version.
@@ -694,6 +694,20 @@ universal so native dependencies are installed, built, signed, and notarized
 on their matching architecture. Apple Silicon uses the canonical
 `latest-mac.yml` update feed; Intel uses `latest-mac-intel.yml` with the
 electron-updater compatibility alias `latest-intel-mac.yml`.
+
+Manual rehearsal can select one `host` (`macos-14`, `macos-15-intel`, or
+`windows-latest`); the default `all` and promotion PRs retain the full matrix.
+For example, dispatch `desktop-package-smoke.yml --ref <branch> -f host=macos-15-intel`
+with `gh workflow run` to investigate a native Intel failure without rebuilding
+the other hosts. PTY smoke logs fixed renderer and main-process stages around
+Workspace creation, response consumption, shell spawn and PTY attachment; these
+diagnostics are enabled only by the existing isolated smoke flag and never log
+request bodies, headers, credentials or user prompts.
+The outer PTY/CLI smoke deadline is 180 seconds, not a fixed delay: it exits
+immediately after acceptance and cleanup. Native Intel evidence showed an
+otherwise successful 88-second run, including a roughly 62-second main-to-renderer
+response delay. Preserve that timing as a separate performance finding rather
+than interpreting a larger smoke budget as a runtime performance fix.
 
 A release-facing change should also verify a clean-machine flow:
 

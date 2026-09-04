@@ -1,14 +1,269 @@
 # Bun-native CLI Distribution
 
+## Stable 0.91.0 acceptance — 2026-09-05
+
+Stable release run
+[33903395758](https://github.com/TraderAlice/OpenAlice/actions/runs/33903395758)
+built all six native archives, but package-manager metadata assembly failed at
+`npm pack` with `spawnSync npm ENOBUFS`. The JSON report now includes the full
+native runtime inventory and exceeds Node's 1 MiB default buffer. Give this
+bounded subprocess 64 MiB and cover the exact option through injected test
+process output; do not suppress npm errors or omit its integrity report. Repair
+through dev/master before dispatching a new release commit. The focused
+package-channel checks passed (seven tests), followed by root types and the
+complete local suite (714 files, 6,361 passes, three skips, 195.26 seconds).
+
+Release source `af04fec0` (including UI integration #1352) was explicitly
+selected by the maintainer and promoted through #1349 after all local and
+hosted source/package/installer/SSH/dev-activation gates passed. Version-only
+#1353 then passed its stable gates and set both manifests to `0.91.0` on master
+`190778de`. No `v0.91.0` tag or public assets have been created.
+
+Final manual Full Source Validation
+[33899369066](https://github.com/TraderAlice/OpenAlice/actions/runs/33899369066)
+found two TUI fixture timeouts on clean macOS and three failures on Linux.
+The same three failures reproduce in isolated local Linux Docker, despite all
+91 TUI tests passing on the development Mac. The fixtures let Fleet discovery
+read the host registry/Home and consume scripted Runtime inspection results:
+an absent host Home disables Launch, while background inventory consumes a
+failure intended for the active-target health sequence. Replace these incidental
+host/network reads with explicit local Fleet and empty Inbox fixtures; retain
+the complete launch/recovery assertions and remove the ineffective CI-only
+timeout increase. This is a test-only dev-lane correction, not a runtime fix or
+a reason to waive final stable validation. Re-promote only this correction,
+preserving the already prepared stable manifest versions.
+
+The corrected fixture passes all 91 TUI tests twice in a fresh Linux container
+(1.77s and 1.81s total, compared with reproducible 31.85s failed baseline),
+without changing production code or weakening the three-failure recovery
+sequence. CLI/root types and full local regression passed: 714 files, 6,360
+tests passed, three expected skips, 243.48 seconds.
+
+Earlier acceptance evidence:
+
+Maintainer authorized stable publication, including both Windows CLI targets.
+AUR activation is deferred while account registration is closed. Promotion
+[PR #1349](https://github.com/TraderAlice/OpenAlice/pull/1349) initially waited on:
+local full regression (712 files, 6,360 passes, three expected skips), root
+types, unsigned packaged Workspace/Pi acceptance, OrbStack Docker and Guardian
+recovery passed. The exact dev channel and both Windows native replay receipts
+passed. Hosted Docker passed unchanged on retry, as did Windows desktop/upgrade,
+Windows Broker Packs and Apple Silicon desktop/upgrade.
+
+Intel desktop Guardian/PTY smoke timed out twice after successful takeover;
+the second run also recorded a spawned Shell but no PTY connection. Smoke-only
+boundary diagnostics and a single-host rehearsal then passed as described below.
+No stable tag or public 0.91.0 bytes exist yet. Release
+and package-manager authority remain owned by [[docs/development-workflow.md]]
+and [[docs/cli-package-managers.md]].
+
+Diagnostic [run 33893555127](https://github.com/TraderAlice/OpenAlice/actions/runs/33893555127)
+passed native Intel takeover, PTY/CLI, packaged Workspace/Pi, and previous-app
+upgrade acceptance. Main returned Workspace HTTP 201 at `16:17:23.386Z`; the
+renderer observed response headers at `16:18:24.943Z`, then successfully spawned
+and attached the Shell. Total takeover smoke was 88 seconds against a 90-second
+budget. PR #1351 increased only the bounded overall deadline to 180 seconds,
+retaining every assertion and phase diagnostic, with no sleep, retry loop or
+production transport workaround. The underlying renderer delivery latency is
+not explained or claimed fixed; track it in [#1350](https://github.com/TraderAlice/OpenAlice/issues/1350). Local diagnostic regression
+passed 712 files / 6,361 tests with three expected skips, root/Desktop types and
+real isolated takeover/PTY/socket acceptance.
+
+## Homebrew activation — 2026-09-04
+
+The maintainer created `TraderAlice/homebrew-tap` and authorized completing
+the channel. Use the existing stable `v0.90.2` formula and archive bytes, not
+new dev builds or an invented version. The tap owns one lightweight hourly/manual
+stable sync workflow, using its own `GITHUB_TOKEN`; the main repository's
+cross-repository token writer remains disabled. Owner contract:
+[[docs/cli-package-managers.md]].
+
+- [x] Verify all four public archive checksums, sidecars, and formula asset digest.
+- [x] Exercise native macOS ARM64 Homebrew install and real detached Runtime
+  startup with an isolated AliceProject and no Node/Bun/agent commands in PATH.
+- [x] Publish the tap, verify its public install and hosted sync receipt.
+- [x] Confirm manager-owned update/removal, user-data preservation, and record
+  final acceptance links. Existing user PATH and installations remain untouched.
+
+Accepted [tap PR #1](https://github.com/TraderAlice/homebrew-tap/pull/1);
+[sync run 33889442153](https://github.com/TraderAlice/homebrew-tap/actions/runs/33889442153)
+used `GITHUB_TOKEN` to publish formula commit `43d9f20`. Public
+`brew install traderalice/tap/openalice` resolved `0.90.2` on macOS ARM64.
+Local verification covered five sync contracts, four public archive hashes and
+sidecars, formula digest/byte equality, real isolated Runtime/Web start/stop,
+package-manager update/uninstall guidance, and data preservation. No new
+Linux/Intel runtime test was purchased for byte-identical release assets.
+A second [sync run](https://github.com/TraderAlice/homebrew-tap/actions/runs/33889497212)
+verified the unchanged version without archive downloads or an empty commit.
+
 Status: Active — macOS/Linux native CLI is public in v0.90.2 and the separately
-dispatched v0.91.0-beta.2 is externally verified; stable remains v0.90.2 while
-stable/beta discovery authority is converged on the OpenAlice CDN;
-the Railway native CLI SSH host passes local empty-Volume, normal replacement,
-hard-kill recovery, real retained-Volume transfer, hosted Agent turns, and live
-v2 normal-restart/hard-kill reacceptance, plus a non-destructive switch from a
-rolling dev Runtime to pinned beta2; the disposable hosted empty-Volume and
-forced installer-failure fallback journeys remain open; native PowerShell and
-external package-manager activation remain deferred
+dispatched v0.91.0-beta.3 is externally verified; stable remains v0.90.2 while
+stable/beta discovery authority is converged on the OpenAlice CDN. Native
+Windows x64/ARM64 channel acceptance and AUR activation remain in progress;
+Homebrew is public at `0.90.2`. npm/Bun's five public
+packages are published at v0.90.2 under maintainer `jiaran258`.
+
+Accepted OIDC increment: replace the temporary npm token with GitHub OIDC trust on
+the same five packages. Preserve stable-only publication and accepted artifact
+bytes; no Windows activation, new version, or package-manager switch changes.
+The non-publishing exchange rehearsal lives in `release.yml` so it verifies
+the real trusted workflow identity. Owner contract: [[docs/cli-package-managers.md]].
+
+- [x] Replace token-based preflight/publication wiring and add OIDC contract tests.
+- [x] Save all five npm Trusted Publisher connections, allowing direct publish
+  from `TraderAlice/OpenAlice` / `release.yml` (2026-09-04).
+- [x] Complete local verification: root typecheck; 708 full-suite files,
+  6,331 passed and 3 expected skips; 47 focused checks and 82 workflow contracts.
+- [x] Integrate [PR #1342](https://github.com/TraderAlice/OpenAlice/pull/1342)
+  into `dev` at `f37243b7`.
+- [x] Run the real five-package OIDC exchange rehearsal without publishing:
+  [run 33871780397](https://github.com/TraderAlice/OpenAlice/actions/runs/33871780397),
+  one successful 15-second job; all release/build/publication jobs skipped.
+- [x] Revoke `openalice-first-publish` on npm and delete the GitHub `NPM_TOKEN`
+  secret after maintainer confirmation on 2026-09-04. Both removals verified.
+- [x] Repeat the five-package exchange after removing both credentials:
+  [run 33872141409](https://github.com/TraderAlice/OpenAlice/actions/runs/33872141409)
+  passed in a single 16-second job without publishing.
+
+The next authorized stable release still owns real new-version upload and
+provenance acceptance. The persistent npm channel switch remains unchanged;
+normal source promotion must carry the OIDC workflow to `master` before a new
+stable release uses it. Windows x64 and ARM64 are the maintainer's accepted next
+platform increment, separate from this completed authentication change.
+
+## Current increment: unified Windows channels
+
+Accepted 2026-09-04: the portable-only decision below is superseded. Windows
+x64 and ARM64 join the existing stable/beta/dev version authority, not a new
+preview version system. Missing personal Windows hardware is an explicitly
+recorded interactive acceptance gap, not a reason to postpone distribution.
+Use the existing native runners for bounded artifact checks; do not restore
+full hosted source suites to dev/beta publication.
+
+Ordered delivery:
+
+- [x] Extend common target/provenance and installer selection to Windows;
+  retain readable manifests for already-installed macOS/Linux dev clients.
+- [x] Add the shared-channel PowerShell bootstrap and side-by-side activation,
+  update, rollback, and data-preserving removal. Never overwrite a mapped EXE.
+- [x] Produce canonical Windows artifacts in the ordinary dev/release lanes,
+  preserving candidates before acceptance and allowing replay without rebuild.
+- [x] Extend npm/Bun materialization and publication inputs to Windows without
+  adding Windows branches to Homebrew/AUR. First publication and OIDC enrollment
+  are separate external-authority checkpoints, not implied by generated files.
+- [ ] Verify local contracts/types/full regression once, existing POSIX
+  installation, and bounded native Windows install/update/rollback/start/stop.
+- [ ] Integrate to dev, inspect live six-target publication, and record the
+  remaining interactive Windows/provider gap before any versioned promotion.
+
+One product version and source commit bind the target set. Platform-specific
+installer bytes are checksum-bound snapshots selected by the shared updater.
+Windows uses an atomic text activation pointer to immutable release directories
+instead of requiring administrator symlink privileges or overwriting a running
+executable. Electron remains on its existing desktop updater.
+
+Dev/beta cross-build Windows on Linux, reusing dev's platform-neutral inputs.
+Only stable and an explicit native rehearsal allocate Windows runners. Native
+acceptance preserves the candidate before running and can replay it without
+dependency installation or recompilation.
+
+Current verification: root/CLI typechecks passed; complete local suite ran once
+(6,348 passed, six stale package-count/workflow assertions repaired and their
+focused suites rerun green, three expected skips). The clean OrbStack installer
+and real macOS npm/Bun installation, pending update, restart and removal passed.
+Canonical Windows candidates from source `5b172265` are preserved in
+[run 33878424385](https://github.com/TraderAlice/OpenAlice/actions/runs/33878424385).
+Native replay exposed PortableGit internal hard links, Windows PowerShell 5.1's
+null-string conversion in atomic replacement, and a transient staged-EXE rename
+lock; these now have bounded handling. ARM64 managed installation, real
+Guardian/Alice/Web/Git, mapped-runtime update, bidirectional rollback and external
+data-preserving removal passed in
+[run 33880423746](https://github.com/TraderAlice/OpenAlice/actions/runs/33880423746).
+Its npm package assembly exposed a release inventory larger than the default
+1 MiB subprocess buffer; the bounded buffer and a local regression fixture are
+fixed. Deferred CLI self-removal and native npm/Bun acceptance are being replayed
+against those same candidate bytes, not represented as a new product build.
+
+Delivery update: [PR #1346](https://github.com/TraderAlice/OpenAlice/pull/1346)
+integrates this topic into the ordinary dev lane after local acceptance; the
+remaining manual Windows rerun is deliberately not a synchronous dev gate.
+Both architectures have exercised install/start/update/rollback. The post-exit
+helper exposed Bun's Windows detached-child behavior, matching
+[Bun #31603](https://github.com/oven-sh/bun/issues/31603); the implementation now
+uses an awaited, quoted `cmd /c start` bootstrap instead of a new polling
+protocol. Its fresh native recheck is
+[33884781763](https://github.com/TraderAlice/OpenAlice/actions/runs/33884781763)
+(candidate source `5e800195`), still pending when this delivery note was written.
+Windows x64 npm install/native execution/manager removal and Bun install/native
+execution/ownership passed. Bun leaves a global entry after removing its package;
+[issue #1347](https://github.com/TraderAlice/OpenAlice/issues/1347) records the
+upstream boundary, and receipts must expose it rather than claim clean removal.
+Post-merge six-target CDN activation and the final native receipt are recorded
+on the integration PR; versioned release and Windows npm authority are still
+separate maintainer actions.
+
+### Accepted preview groundwork
+
+Accepted 2026-09-04: ship both Windows architectures iteratively, without making
+the Windows experiment a prerequisite for existing macOS/Linux channels.
+Owner contracts: [[docs/cli-installer.md]], [[docs/local-runtime.md]].
+
+Choose a portable ZIP plus checksum-bound, side-by-side PowerShell installation
+first. This gives testers a complete product immediately without prematurely
+claiming stable npm availability or adding Windows junction/update recovery to
+the first increment. A direct managed updater and npm registration remain later
+acceptance steps; custom preview provenance deliberately disables automatic
+channel discovery. Agent CLIs remain user-owned.
+
+- [x] Compile both Windows architectures with pinned Bun 1.4.0 locally.
+- [x] Assemble complete ZIPs with UI, templates, helpers and checksum-pinned
+  PortableGit/Bash; use the existing desktop Git pins, not desktop managed Pi.
+- [x] Add explicit PowerShell archive installation into a new directory, with
+  checksum/path/host checks, consent, no admin/PATH changes, and no data removal.
+- [x] Correct Windows Git environment, npm-agent interpreter resolution and
+  ConPTY termination; bound slow WebSocket consumers without POSIX signals.
+- [x] Add an independently retryable, manual x64/ARM64 workflow. Preserve each
+  archive before its native smoke so failures retain reproduction bytes.
+- [x] Complete local regression/type checks and integrate [PR #1344](https://github.com/TraderAlice/OpenAlice/pull/1344)
+  into `dev` at `1d1dc21d`: full baseline 6,342 passes, final focused 74 passes,
+  root/CLI types, local Windows ZIP builds and complete macOS native smoke.
+- [x] Run native Windows installation, Guardian/Alice/Web, Git, ConPTY input,
+  resize, independent termination and stop checks for each architecture.
+- [ ] Perform interactive external-agent/provider acceptance; record concrete
+  failures instead of claiming cross-compilation proves Windows runtime support.
+- [ ] Add accepted Windows artifacts to the normal direct-channel manifest and
+  npm topology, then first-publish and enroll the two new package identities.
+
+The first preview is not a new beta/stable release. It is commit-addressed
+Actions output with a separate native acceptance receipt and no mutable channel
+alias. `CLI Installer Smoke` can dispatch only this lane from integrated `dev`
+using `windows_preview=true`, without the normal manual installer matrix.
+
+Native rehearsal [33874069985](https://github.com/TraderAlice/OpenAlice/actions/runs/33874069985)
+preserved the x64 ZIP and passed ConPTY input/resize/independent termination.
+Its installation smoke exposed inherited PowerShell 7 `PSModulePath` preventing
+Windows PowerShell 5.1 from discovering `Get-FileHash`; reset only that child
+environment, not the host. A separate old classifier assertion also needed to
+recognize the manual Windows-only selector. Neither failure is waived.
+The next smoke attempt accepts the saved ZIPs with `windows_candidate_run`,
+skipping dependency installation and all rebuilds; product changes still need
+a newly compiled candidate. Ambiguous/missing archived candidates fail closed.
+
+Accepted native replay: [33875035438](https://github.com/TraderAlice/OpenAlice/actions/runs/33875035438)
+passed on both native hosts, reusing product commit `579bd53e` from the first
+build. ARM64 took 66 seconds and x64 67 seconds; both skipped Node/pnpm setup,
+dependency installation and all builds. The receipts bind these exact archives:
+
+| Architecture | Content identity | Archive SHA-256 |
+|---|---|---|
+| x64 | `bec6a7546a3e1c4c` | `66f98d667861df4e8bc74a60f2e12665dd1bbbcbbfe76495d0b7764bc25bcf0c` |
+| ARM64 | `dc78db8c9192513a` | `8ad8791c605e5105dedfe84c8e5faa56258e706d653914d64275d5a08cd41fc8` |
+
+[x64 preview](https://github.com/TraderAlice/OpenAlice/actions/runs/33874069985/artifacts/9937224452)
+and [ARM64 preview](https://github.com/TraderAlice/OpenAlice/actions/runs/33874069985/artifacts/9937338651)
+are retained for 30 days as Actions artifacts, not permanent GitHub Release or
+npm assets. Real interactive Agent/provider use and manual upgrade/removal are
+still explicit follow-up acceptance, not implied by this smoke.
 
 Delivery mode: Serial / interactive from current `dev`. The accepted native CLI
 increments have already reached `dev`; the old `codex/usability-improvements`
@@ -228,19 +483,17 @@ installations are never removal targets.
 
 ### Initial build matrix
 
-The current cutover gate covers macOS and Linux. Native Windows is explicitly
-deferred; its PowerShell, PTY, path, junction, signing, and locked-executable
-work remains a later platform initiative rather than blocking this plan.
+The original cutover gate covers macOS and Linux. Windows x64 and ARM64 now
+have a separate preview increment above; they do not block the existing matrix.
 
 | Platform | Architectures | Initial gate |
 |---|---|---|
 | macOS | arm64, x64 | Required |
 | Linux glibc | arm64, x64 | Required |
-| Windows | x64 | Deferred |
+| Windows | x64, arm64 | Independent preview; native acceptance pending |
 
-Linux musl and Windows arm64 are follow-up targets only after there is a
-supported-user or deployment requirement. Do not multiply release variants
-before the required matrix is proven.
+Linux musl remains deferred. Windows ARM64 is explicitly requested and is not
+replaced by an x64 emulation claim.
 
 ## Installation and Package-manager Topology
 
@@ -351,11 +604,16 @@ additional registry tags or formulas.
 
 The Web version surface follows the running topology rather than creating
 another updater. Source checkouts use Git; packaged Electron uses its native
-updater; direct stable/beta CLI installs use `openalice update`; and Railway or
-Docker stays owned by the service deployment. Direct dev changes are compared
+updater; direct stable/beta CLI installs use `openalice update`; and Docker stays
+owned by the service deployment. Direct dev changes are compared
 by the native CLI or deployment through checksum and content identity, not by
 package semver in the browser. Pinned, custom, and invalid provenance fail
 closed without an implicit update action.
+
+Package semver remains build/display metadata rather than source-channel
+authority. Once a release is accepted, a focused two-manifest PR synchronizes
+its root and CLI versions back to `dev`; explicit source launcher identity keeps
+that checkout on the dev channel.
 
 ## Alternatives Considered
 
@@ -455,7 +713,7 @@ build harness when it improves the next investigation.
 
 ### 5. Package-manager publication
 
-- [ ] Reserve the npm meta and platform package names; keep the resulting
+- [x] Reserve the npm meta and platform package names; keep the resulting
   command named `openalice`.
 - [x] Generate npm platform packages from accepted release archives and one
   meta package with platform `optionalDependencies`.
@@ -484,6 +742,9 @@ build harness when it improves the next investigation.
   AUR Git access without logging or weakening the external credentials.
 - [x] Expose the authority preflight as a bounded manual, read-only rehearsal
   that cannot publish packages, push metadata, or create a release.
+- [x] Let an authenticated first stable publication claim the five fixed,
+  unreserved npm names, while retaining maintainer checks for existing names
+  and integrity-checked idempotent retries after partial publication.
 - [ ] Publish Brew/AUR metadata only after the referenced release assets are
   public and verified. The opt-in automation and public-byte receipt are ready;
   external repository creation, credentials, activation, and first public
@@ -527,8 +788,8 @@ artifacts.
 - [x] Define an explicit unsupported-host result for targets outside the
   accepted Bun build matrix.
 - [x] Keep the existing source-built Docker server image on its current
-  bundled-Agent/public-Web contract; add the separately justified Railway
-  native CLI SSH-host profile instead of reshaping that image.
+  bundled-Agent/public-Web contract; managed SSH remains a separate
+  provider-neutral existing-host path.
 
 ### 8. Retire the expanded CLI Runtime
 
@@ -571,7 +832,8 @@ artifacts.
 - [x] Promote the exact accepted `dev` tip, including the GitHub-safe AUR
   metadata asset contract, to `master` through the full promotion gate.
 - [x] Use a focused `master` branch and PR to set both product manifests to
-  `0.91.0-beta.1`; do not merge that version-only commit back to `dev`.
+  `0.91.0-beta.1`; keep release preparation isolated from implementation, then
+  synchronize only the accepted published version metadata back to `dev`.
 - [x] Dispatch one `beta` release for `v0.91.0-beta.1`. Do not produce or queue
   a stable release from the same run.
 - [x] Externally verify the beta GitHub Release, updater feeds, CLI manifest,
@@ -580,9 +842,15 @@ artifacts.
 - [x] Leave later fixes on `dev`. A `beta.2` checkpoint is optional; stable is
   a separate later decision after beta testing and maintainer acceptance.
 - [x] After later `dev` fixes and the beta fast-lane redesign, publish only
-  `v0.91.0-beta.2`, independently verify its public surface and stable-channel
-  isolation, then replace the retained Railway dev Runtime through the
-  service-owned selector rather than an SSH-owned install.
+  `v0.91.0-beta.2` and independently verify its public surface and
+  stable-channel isolation.
+- [x] After the remote-readiness increment, publish only
+  `v0.91.0-beta.3`, independently verify all accepted assets and
+  stable-channel isolation, and record the Settings identity-refresh fix as the
+  following `dev` increment.
+- [x] Synchronize the root and CLI package baselines to `0.91.0-beta.3` on
+  `dev`, while making explicit source launcher identity—not package semver—the
+  authority for the `dev` update channel.
 
 ### 11. Converge channel discovery authority
 
@@ -611,136 +879,28 @@ Runtime discovery must not depend on GitHub's anonymous API quota.
   tests, the public stable install plan, clean Linux installer acceptance, and
   the real Settings route without GitHub API access.
 
-### 12. Railway native CLI SSH host
+### 12. Make local acceptance primary for dev and beta
 
-This is a small deployment profile of the Stage 2 SSH product. It is not a
-hosted Studio, public Web server, new installer, or replacement for the
-source-built Docker image.
-
-- [x] Add a repo-owned `Dockerfile.railway` and entrypoint that keep the native
-  OpenAlice release out of the image, validate or install it on the mounted
-  volume, and `exec` foreground `openalice server run` under `tini`.
-- [x] Fix the Volume at `/data`, Railway SSH `HOME` at `/data/home`, and native
-  install/npm/Bun user roots beneath it. Export those paths and persistent
-  `PATH` from the image for Railway SSH, use system-only `PATH` during
-  bootstrap, and keep machine launch links rebuildable outside the durable
-  authority.
-- [x] Allow only `OPENALICE_HOME` to select a Project beneath `/data`; always
-  derive `AQ_LAUNCHER_ROOT` from it and reject alternate Volume/user/install/
-  package roots or normalized escapes.
-- [x] Reuse the shared stable/beta/dev installer. Stable and beta may select an
-  in-channel pinned version; dev follows its completed latest manifest and
-  rejects a version override. A failed refresh may reuse only a still-valid
-  prior release; an empty failed bootstrap stops.
-- [x] On ordinary SSH-managed hosts, compare stable, beta, and pinned targets by
-  logical release while validating each target's schema 3 platform,
-  architecture, checksum, content identity, and embedded Runtime locally. For
-  dev, require the invoking CLI to match the latest manifest and bind installer
-  handoff to the remote target from that same completed set.
-- [x] Keep Railway inspection-only from the laptop: the service entrypoint and
-  variables own release selection and lifecycle, while `openalice remote`
-  verifies target-local provenance/Runtime consistency, distinguishes a
-  configured selector from a verified fallback, and opens only the tunnel.
-  Replace persistent command shims with the image-owned wrapper after every
-  selection and route SSH `update`, `rollback`, and `uninstall` back to Railway
-  configuration so neither a current release nor a published fallback can
-  split the persistent pointer from the foreground Runtime.
-- [x] Keep Agent Runtime installation, authentication, version, plugins, and
-  updates user-owned through Railway SSH and persistent user `PATH` locations.
-- [x] Make AliceProject transfer Git-aware: retain tracked and nonignored
-  untracked Workspace content, exclude ignored untracked dependencies, native
-  install/runtime/session/known-backup state, and reject or classify unsafe
-  symlinks. Prove ordinary repositories remain connected after transfer and
-  fail closed on linked worktrees, alternate/promisor object state, nested Git
-  repositories, and initialized submodules. Transfer only Alice-owned
-  credential families through the private stream; Web auth/sessions and native
-  Agent login/config remain destination setup.
-- [x] Pass Bash syntax plus the focused entrypoint, managed-remote, and
-  Project-transfer specs (222 tests).
-- [x] Build `Dockerfile.railway`, bootstrap the native CLI and foreground
-  Runtime from an empty local Docker Volume, then perform a normal
-  stop/recreate replacement against that Volume and retain CLI and Project
-  markers. Verify the image has no Agent Runtime.
-- [x] Run the content planner locally against the real Default AliceProject,
-  using the intended Railway destination metadata but no SSH or mutation:
-  10,693 portable files, 5,612 directories, 222,215,071 portable bytes,
-  289,328,517 required destination bytes, 21 credential entries, six
-  exact-Session scheduled Issues, and no content-policy blockers. Git-ignored
-  dependencies plus runtime, backup, session, install, and machine-local state
-  remain excluded. Live source ownership/quiescence and remote capability,
-  destination, and free-space preflight are not part of this offline evidence.
-- [x] Rerun the hard-kill container replacement after the stale-owner PID reuse
-  and CLI preflight repairs in the local Docker harness. The current dev Bun
-  Runtime reclaimed the stale lock on the same Volume, retained the Project
-  marker, matched release content without pending activation, restored the
-  fixed SSH Home/PATH, and did not acquire an Agent Runtime. This evidence did
-  not exercise Railway replacement containers with isolated PID namespaces.
-- [x] Diagnose the first retained-Volume Railway deployment failure. Its old
-  beta lock used the legacy hostname-derived machine identity, while the new
-  container correctly used the stable Railway service identity; ordinary
-  foreign-machine protection therefore left the stale owner blocked.
-- [x] Reject the first heartbeat-based handoff repair during review. It allowed
-  ordinary Railway SSH to gain cross-container reclaim authority and had a
-  stale-inspection/rename race. Cancel its dev artifact before publication;
-  keep the last accepted dev manifest unchanged.
-- [x] Replace heartbeat authority with a Volume-mount-inode kernel `flock`
-  taken before installer or Project mutation. Validate the real mount, its
-  canonical relationship to the actual Home/install roots, and the inherited
-  locked FD. Pass a startup duplicate only through CLI -> Guardian ->
-  Alice/UTA/Connector; those trusted writers validate and retain lifetime copies
-  while ordinary child processes, adapters, Agents, and PTYs receive none. Write `railway-flock-v1` owner
-  records, keep ordinary SSH observer-only, fail closed at every Runtime hop,
-  discover every Volume Project and reject legacy owners before release or
-  Project mutation, and recheck complete owner evidence before quarantine.
-- [x] Pass the fenced-handoff local gates: focused ownership/CLI/entrypoint and
-  capability-isolation specs, root/Guardian/CLI TypeScript, full suite,
-  Guardian recovery, Linux installer and SSH-remote Docker smokes, plus a
-  Linux shared-Volume drill for suspended holder, hard kill, and simultaneous
-  replacements. Rebuild the Railway image and reconfirm that it contains no
-  Node, Bun, or Agent Runtime executable.
-- [x] Pass the remaining local repository gates: root and CLI TypeScript,
-  `git diff --check`, the 222-test focused run, the 5,266-test full suite,
-  Linux installer and SSH-remote Docker smokes, Guardian recovery smoke, and a
-  rebuilt Railway image with the required tools but no Node, Bun, or Agent
-  Runtime.
-- [x] Replace recursive mutation-claim cleanup with a UUID generation marker
-  shared by publication, release, and stale reaping. Atomically retire only the
-  exact marker generation, recheck it before canonical mutation, distinguish
-  Railway replacements with a per-start instance id, require the
-  `railway-runtime-lock-v2` capability, and let the Volume-fenced preflight
-  recover only exact claim-only/published-owner intermediate shapes after a
-  blocker-free full scan. Unknown entries, duplicate claim markers/write temps,
-  and malformed or symlinked nodes remain fail-closed.
-- [ ] On a disposable Railway service and empty `/data` Volume, pass clean
-  bootstrap and empty-host install-failure/fail-closed acceptance without using
-  or clearing the retained real Volume.
-- [x] Deploy the profile non-destructively against the retained real Railway
-  `/data` Volume with no public domain, no Dashboard Start Command override,
-  Serverless disabled, Restart Policy set to Always, one replica, at least 30
-  seconds of draining, fixed SSH `HOME=/data/home` plus persistent user `PATH`,
-  an OpenSSH alias from `railway ssh config`, and a successful inspection-only
-  `openalice remote` browser/tunnel journey. The v2 deployment automatically
-  recovered the exact supported interrupted-lock shape without manual lock
-  deletion and retained the selected Project and native install.
-- [x] Repeat `openalice project transfer --plan` through the deployed Railway
-  candidate so SSH compatibility, destination absence, and free-space
-  preflight are proven before apply.
-- [x] Apply the reviewed real AliceProject transfer into a new
-  `/data/projects/<name>` Home, select that Home for the service, and verify its
-  portable Workspace/configuration state after redeploy without copied install
-  bytes or machine-local symlinks.
-- [x] Install and authenticate one Agent Runtime through Railway SSH, then prove
-  a real Workspace turn without treating those Agent bytes as an OpenAlice
-  release artifact.
-- [x] Restart and redeploy against the same retained Volume, then hard-kill the
-  exact foreground Runtime child once. Verify automatic v2 recovery, distinct
-  per-start fence identities, persistent install/Home/OpenCode state, Runtime
-  readiness, and successful continuation of the same remote Session after both
-  replacements without deleting a lock.
-- [ ] Force one installer failure with a known-valid prior release on the
-  retained Volume and observe the bounded exact-release fallback. Keep the
-  empty-Volume install-failure/fail-closed journey isolated to the disposable
-  service above.
+- [x] Fix the confidence boundary: surface-appropriate local tests, browser,
+  OrbStack, and unsigned Electron/package smokes are the primary development
+  evidence. Hosted CI is a cheap integration/build backstop for routine PRs,
+  not a second full test environment.
+- [x] Reduce routine integration PRs to one clean Ubuntu workflow-contract,
+  root-typecheck, and complete-build lane. Do not allocate the full Vitest
+  suite, macOS/Windows matrix, dev-smoke, Docker image, desktop packages, or
+  managed-SSH fixture.
+- [x] Retain only the cheap checkout HTTP installer on relevant dev PRs. Keep
+  the four native dev candidates, packaged-runtime acceptance, atomic alias
+  publication, and live raw-dev install on the post-merge `dev` push.
+- [x] Reduce exact beta version preparation to the trusted base classifier,
+  workflow contracts, root typecheck, and stable aggregate check name. Let the
+  manually dispatched Release build and accept the final version-bearing
+  artifacts once; the post-merge full `master` run is an asynchronous backstop.
+- [x] Keep `master` promotion, stable preparation/release, `master` push,
+  nightly, and manual full validation on the complete cross-platform lanes.
+- [x] Verify the lightweight lane on its own `dev` PR and record the measured
+  before/after wall and runner time. Local workflow contracts, root typecheck,
+  full tests, and full build must already be green before opening that PR.
 
 ## Verification Matrix
 
@@ -756,14 +916,13 @@ Add according to the increment:
 
 ```bash
 cd ui && npx tsc -b
-pnpm test:guardian-recovery
-pnpm test:install:docker
-pnpm test:install:dev-channel
-pnpm test:remote:docker
+pnpm test:system:guardian
+pnpm test:system:installer
+pnpm test:system:installer:dev
+pnpm test:system:remote
 pnpm electron:smoke:pty
 pnpm electron:smoke:workspace
-bash -n scripts/railway/*.sh
-pnpm exec vitest run scripts/railway-entrypoint.spec.ts \
+pnpm exec vitest run \
   packages/cli/src/install.spec.mjs \
   packages/cli/src/lifecycle.spec.mjs \
   packages/cli/src/project-command.spec.ts \
@@ -784,7 +943,8 @@ credentials or broker state. OrbStack validates Linux behavior efficiently,
 including native Bun release and multiprocess Runtime acceptance on Linux
 arm64 and x64, but it does not replace native macOS acceptance. Prefer this
 local native-macOS plus OrbStack matrix during serial development instead of
-waiting on hosted runners; hosted jobs remain publication and release gates.
+waiting on hosted runners; hosted jobs remain final publication and stable
+release gates rather than a duplicate routine-development test harness.
 Windows PowerShell,
 filesystem-locking, PATH, and executable-signing checks belong to the deferred
 Windows lane.
@@ -856,13 +1016,27 @@ This plan is complete only when:
 9. the old expanded headless Runtime and managed-Pi CLI distribution paths are
    deleted from current source and the durable owner guides describe the Bun
    architecture; and
-10. the Railway SSH-host profile completes both a disposable empty-Volume
-    bootstrap/fail-closed journey and a non-destructive retained-Volume journey
-    with fixed persistent SSH Home, AliceProject migration, a user-owned Agent
-    turn, same-Volume normal and hard-kill restart/redeploy, and exact-release
-    fallback without a public Web route.
-
+10. managed remote can install, start, reuse, and tunnel the native Runtime on
+    an ordinary SSH-reachable host without owning its infrastructure provider.
 ## Progress Log
+
+- 2026-09-04: Maintainer authorized attempting the five unscoped npm names
+  with the accepted v0.90.2 tarballs. A seven-day bootstrap token is configured
+  in GitHub Actions. Added an explicit `Release / publish-npm` operation for
+  current stable assets only, without rebuilding or changing version/CDN state.
+  npm 12 installation requires explicit `--allow-scripts=openalice`. An
+  isolated local registry serving the original, integrity-verified tarballs
+  passed npm 12.0.2 / Node 22.22.2 install, version, detached start, status, and
+  stop on macOS arm64 with no Node/Bun in Runtime PATH. All five packages were
+  published under `jiaran258` in
+  [run 33860369715](https://github.com/TraderAlice/OpenAlice/actions/runs/33860369715)
+  (98 seconds, one hosted job). Independent registry reads matched all five
+  accepted integrity values; a fresh public-registry npm 12 install passed
+  version, detached start, status, and stop with isolated data. Tooling merged
+  through [PR #1340](https://github.com/TraderAlice/OpenAlice/pull/1340), with
+  root typecheck, 34 focused tests, and 6,319 hermetic tests passing (3 expected
+  skips). No beta, CDN, desktop, Homebrew, or AUR publication ran. The persistent
+  automatic npm switch remains disabled; OIDC is still follow-up work.
 
 - 2026-08-29: Maintainer selected the architecture after comparing Herdr and
   OpenCode. CLI is treated as a primary long-running distribution. The selected
@@ -1082,6 +1256,16 @@ This plan is complete only when:
   absent from the Runtime `PATH`. Stable registry/tap/AUR publication and the
   tagged-release matrix remain release activation work; Windows remains
   deferred.
+- 2026-09-03: Public-channel inspection confirmed the direct Bash installer is
+  live, all five intended npm names remain unreserved, the Homebrew Tap does
+  not exist, and the repository's `NPM_TOKEN` now returns HTTP 401. The npm
+  authority gate now treats 404 names as explicit first-publication targets
+  after authenticating the token, while existing names still require matching
+  maintainership. Stable npm publication now verifies every tarball against
+  the accepted manifest and safely skips an already-published identical
+  version, so a partial first publication can be retried without weakening
+  package identity. External activation remains blocked on replacing the npm
+  token and deliberately enabling the stable npm switch.
 - 2026-08-30: Closed the Linuxbrew acceptance gap with pinned official
   Homebrew 6.0.15 images for native Linux arm64 and x64 runners. The shared
   system-package lifecycle now accepts Homebrew on macOS or Linux, while a
@@ -1165,129 +1349,6 @@ This plan is complete only when:
   GitHub API seam, and the real Settings card plus forced refresh. A direct
   public beta manifest read resolved v0.91.0-beta.1. No release or channel
   promotion was performed.
-- 2026-08-31: Added the focused Railway native CLI SSH-host increment in the
-  working tree. The repo-owned image fixes `/data`, persistent Railway SSH
-  `HOME=/data/home`, OpenAlice install/npm/Bun user paths, and persistent `PATH`;
-  bootstrap first uses system-only `PATH`. Only `OPENALICE_HOME` selects a
-  Project and its Workspace root is always derived. Ordinary SSH-managed remote
-  treats stable/beta/pinned as logical releases with target-local artifact
-  integrity, while dev is bound to both local and remote targets from the latest
-  completed manifest. Railway remains platform-owned and inspection-only from
-  the laptop. Project transfer is Git-aware and excludes native install,
-  runtime, Session, known-backup, and machine-local state. Focused Bash,
-  entrypoint, managed-remote, and Project-transfer checks passed 222 tests; the
-  full suite passed 5,266 tests. Root and CLI TypeScript, diff checks, Linux
-  installer and SSH-remote Docker smokes, Guardian recovery smoke, and the
-  Railway image prerequisite/no-runtime check also passed. A local empty-Volume
-  build and normal stop/recreate retained CLI and Project markers while
-  confirming the image has no Agent Runtime. A later hard-kill exposed
-  stale-owner PID reuse and CLI preflight defects; after the owner check adopted
-  stable machine and process-start identity, the current dev Bun Runtime passed
-  the same-Volume hard-kill/recreate journey with its Project marker and
-  persistent login-shell environment intact. The real Default AliceProject
-  offline content-planner pass, using destination metadata but no SSH, reduced
-  the portable boundary to 10,693 files, 5,612 directories, and 222,215,071
-  bytes; it requires 289,328,517 destination bytes and found 21 credential
-  entries plus six exact-Session scheduled Issues, with no content-policy
-  blockers. Git-ignored dependencies, runtime state, backups, sessions, native
-  install trees, and machine-local state stay outside the stream. Live source
-  ownership and remote destination preflight remain separate apply gates. A
-  real public `v0.91.0-beta.1` run in the final Railway image proved the legacy
-  provider-without-content-identity compatibility fallback, and the
-  image-owned persistent wrappers blocked direct update, rollback, and
-  uninstall without changing the active pointer, release store, or install
-  manifest. The disposable hosted empty-Volume drill, Project apply, the
-  real Railway fixed-layout candidate deployment, Agent, restart/redeploy, and
-  failure journeys remain pending. The inspected Railway service with
-  `HOME=/root` is the old deployment, not candidate evidence.
-- 2026-09-01: Review of the first same-service handoff repair found two release
-  blockers: general Railway SSH inherited reclaim authority, and a heartbeat
-  could refresh between stale inspection and lock-directory rename. Dev build
-  run 33417079146 was cancelled before publication; the public dev manifest
-  stayed on `7a5fad58`. The replacement now locks the real Railway Volume mount
-  directory before creating mutable paths or installing. It validates canonical
-  actual Home/install containment plus the locked directory FD through Linux
-  fdinfo. A read-only Volume-wide retained-lock preflight now rejects legacy
-  ownership before release-pointer, shim, or Project mutation. Guardian keeps
-  the lifetime copy; Alice, UTA, and Connector retain lifetime duplicates that
-  ordinary children, adapters, Agents, and PTYs do not inherit. CLI, Guardian,
-  Alice, UTA, and Connector all fail
-  closed when the profile declares a missing or invalid fence. Cooperative owners declare `railway-flock-v1`;
-  legacy owners and changed owner evidence fail closed. The current macOS
-  focused review sets pass with the expected Linux-only skips; root, CLI,
-  and Guardian TypeScript, shell/Node syntax, Guardian recovery, and the full
-  5,292-test suite pass. A compiled Linux arm64 Bun chain independently proved
-  identical Volume/CLI/Guardian lock identity, trusted-writer descriptor adoption,
-  blocked contention, and fenced Guardian/Alice owner metadata. Linux installer,
-  remote-SSH, and full Docker Runtime smokes pass. PR/dev archive publication,
-  live Railway reacceptance, Project apply, and the Agent turn remain pending.
-- 2026-09-01: PR #1280 merged the kernel-fence repair to `dev` at
-  `a0f17e40`; run 33431851058 published all four native aliases and passed the
-  public raw/dev install. The retained Railway Volume then failed before
-  release mutation on eight legacy lock directories as designed. After proving
-  the old deployment had stopped and no installed writer remained, those exact
-  directories and owner records moved reversibly to
-  `/data/quarantine/legacy-cutover-a0f17e40-1/`; the new Linux x64 archive
-  started with Guardian and Alice holding the Volume inode fence. Its first
-  restart exposed a separate immutability defect: the Workspace logger used
-  `process.cwd()` and appended to the release-owned
-  `share/openalice/logs/workspace-sessions.log`, so reinstall verification
-  rejected the changed tree and safely fell back. The current fix routes that
-  sink to `<OPENALICE_HOME>/logs/workspace-sessions.log` and opens it lazily so
-  a rejected pre-fence Alice process cannot create Project state. A direct
-  no-fence Alice regression now requires the whole Project Home to stay absent;
-  the real Bun Workspace smoke requires the Project-owned log and rejects any
-  before/after release-tree mutation. Root TypeScript, the 5,295-test suite,
-  full build, and the local native Bun release smoke pass. A fresh dev archive
-  and Railway restart/redeploy acceptance remain required before Project
-  transfer.
-- 2026-09-01: PR #1281 merged the immutable Workspace-log repair to `dev` at
-  `50f3d49f`, and run 33435309446 published the matching native archives. The
-  retained no-domain Railway service then installed that dev archive under the
-  persistent SSH Home, selected `/data/projects/main-cloud`, and received the
-  stopped local Default AliceProject through the production transfer path:
-  10,702 files and 222,635,304 bytes, with zero native Sessions copied. OpenCode
-  1.18.25 was installed separately under `/data/home`, and Workspace
-  `chat-solid-coral-ridge` completed a real headless turn with
-  `OPENALICE_REMOTE_OK`. A following service restart exposed two crash-recovery
-  defects not covered by the earlier container drill: recursive release could
-  strand an empty canonical directory, and reused Railway hostname/PID identity
-  could misclassify the prior container. The current v2 repair adds a fresh
-  per-start instance id, requires both Railway Runtime capabilities, and uses a
-  UUID generation marker for publication/release/reaping. Exact-marker atomic
-  retirement prevents an old recoverer from deleting a new claim; the
-  Volume-fenced preflight validates every Project before cleaning only known
-  claim-only, owner-write-temp, or published-owner intermediates. Claim-only
-  status is no longer reported as absent. Focused Runtime/CLI/entrypoint tests
-  pass 133 tests with four platform skips; root, Guardian, and CLI TypeScript,
-  diff checks, Guardian recovery, and the full 5,319-test suite with 13 skips
-  are green. Linux installer, native SSH-remote, and full Docker Runtime smokes
-  also pass on OrbStack. At that point a new dev archive, live automatic
-  recovery, persisted resume, and restart/hard-kill acceptance remained
-  pending; no stable/beta release or channel promotion was performed.
-- 2026-09-01: PR #1282 merged the v2 lock repair to `dev` at `5d58b259`;
-  workflow run 33448877068 published and accepted all four matching dev
-  archives plus the raw `dev/install` path. The retained no-domain Railway
-  service deployed candidate `9e423f82-3b24-4a8f-bb1e-efa8be770387` and
-  automatically recovered the supported interrupted
-  `config-bootstrap.lock` shape without manual deletion. Its Linux x64 Runtime
-  retained content identity `36bda5ecaa277a15`, selected
-  `/data/projects/main-cloud`, the migrated 10,702-file Default AliceProject,
-  and user-owned OpenCode 1.18.25. A normal restart and an exact hard kill of
-  the foreground Runtime child each produced a fresh fencing-instance id and
-  returned Alice, UTA, and Connector to ready state on the same Volume; the
-  fence changed from `a45ff33c` to `5866184a` and then `c3ca8fa8`. OpenCode
-  resume `resume-smooth-paper-bridge-ysivle` then completed
-  `OPENALICE_REMOTE_RESUME_OK`, `OPENALICE_REMOTE_RESTART_OK`, and
-  `OPENALICE_REMOTE_HARD_KILL_OK`; the inspection-only SSH tunnel also loaded
-  the migrated real UI without a public domain. That UI exposed a separate
-  authority defect: package semver made a service-managed dev Runtime suggest
-  a stable source update. The follow-up now derives channel from provenance and
-  keeps source, desktop, CLI, service, and non-updating ownership distinct;
-  service/dev/pinned/custom contexts do not create a duplicate Web updater.
-  The disposable hosted empty-Volume/bootstrap-failure drill and retained
-  valid-release forced-refresh fallback remain pending. No stable/beta release,
-  tag, or channel promotion was performed.
 - 2026-09-01: Published only
   [`v0.91.0-beta.2`](https://github.com/TraderAlice/OpenAlice/releases/tag/v0.91.0-beta.2)
   from `87b5a81aa608c6c687c21d24259ea78054a632ac` in
@@ -1301,16 +1362,24 @@ This plan is complete only when:
   Packs, and the beta CDN manifest. The default installer and GitHub latest
   release still resolve stable `v0.90.2`; the captured stable manifest, feeds,
   aliases, ETags, and sizes remained unchanged.
-- 2026-09-01: The retained no-domain Railway service then changed explicitly
-  from rolling `dev` to pinned `beta` `0.91.0-beta.2` through service variables
-  and one platform-owned redeploy (`0b8b36f9-3400-401d-965b-88c38ba42247`).
-  The entrypoint installed the accepted Linux x64 archive with SHA-256
-  `aae9e485e48e3ec56a108d64471c6b7e1c80da5f35408d236fbeb5f2d36582f7`
-  and content identity `02fb66323ca9fbf9`; the running provider is Bun and
-  advertises both Railway Runtime capabilities with no pending activation or
-  fallback. Alice, UTA, and Connector returned ready on the same
-  `/data/projects/main-cloud` Project id, whose 10,763 files and six Workspace
-  directories remained present. User-owned Pi 0.84.4 and OpenCode 1.18.25
-  remained executable under `/data/home`, and a fresh inspection-only SSH
-  tunnel served the beta2 UI on local loopback. No installer or release-pointer
-  mutation ran through Railway SSH.
+- 2026-09-01: Reframed development confidence around local acceptance instead
+  of constrained hosted runners. Routine `dev` PRs now retain one clean Ubuntu
+  workflow-contract, root-typecheck, and complete-build lane; relevant CLI
+  changes additionally retain only the clean checkout HTTP installer. Exact
+  beta preparation retains the trusted base classifier plus contracts and
+  typecheck, while the Release workflow owns the final candidate build and
+  artifact acceptance. Full tests, macOS/Windows, dev-smoke, Docker, desktop,
+  Broker Pack, and managed-SSH lanes remain on `master`, stable, nightly, or
+  manual authority rather than synchronously blocking routine development.
+  Before opening the proving PR, local workflow contracts passed 47/47, the
+  root suite passed 5,431 tests with 13 expected skips, root typecheck passed,
+  and the complete workspace build passed. The prior remote baseline was a
+  15:31 desktop critical path for the preceding product PR and a 5:15
+  redundant Ubuntu root-test lane for the version-only beta3 PR. On the
+  workflow's own [PR #1298](https://github.com/TraderAlice/OpenAlice/pull/1298),
+  central feedback completed in 2:50 wall and 2:37 runner time; the relevant
+  clean checkout installer completed in 0:31 wall and 0:25 runner time in
+  parallel. All full-test, macOS/Windows, dev-smoke, Bun-feasibility, and
+  managed-SSH jobs were explicitly skipped. The combined critical path fell
+  81.7% from 15:31 to 2:50 and aggregate hosted allocation fell from roughly 70
+  minutes to 3:02 (about 95.7%).
