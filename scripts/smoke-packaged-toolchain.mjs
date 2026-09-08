@@ -117,7 +117,7 @@ export function buildPackagedToolchainSmokePlan(packageResult) {
     const gitExe = join(gitRoot, git.gitBin)
     const bashExe = join(gitRoot, git.shellPath)
     const shExe = join(gitRoot, git.shPath)
-    const dugiteEntry = join(packageResult.appRoot, 'node_modules', 'dugite', 'build', 'lib', 'index.js')
+    const dugiteEntry = join(dirname(packageResult.appRoot), 'app.asar', 'node_modules', 'dugite', 'build', 'lib', 'index.js')
     const workspaceCliDir = join(packageResult.appRoot, 'src', 'workspaces', 'cli', 'bin')
     const toolchainPath = (Array.isArray(git.toolchainPaths) ? git.toolchainPaths : ['cmd', 'bin', 'usr/bin'])
       .map((entry) => join(gitRoot, entry))

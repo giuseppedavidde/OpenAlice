@@ -474,7 +474,7 @@ Native Agent configuration files may contain user- or runtime-owned settings.
 The compatibility exporter must update only OpenAlice-owned keys/nodes,
 preserve unknown data, and restore the prior value on reset where a shared
 scalar is overridden. It is reached through the advanced deprecated surface;
-normal Workspace creation, Quick Chat, Issues, probes, WebPi, and resume do not
+normal Workspace creation, Quick Chat, Issues, probes, Web Sessions, and resume do not
 call it.
 
 Pi uses one generic OpenAlice-managed project extension plus local provider and

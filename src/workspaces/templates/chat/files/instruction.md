@@ -55,8 +55,8 @@ relevant skill before the first domain command and never guess flags.
 |---|---|---|
 | Current market boards, fundamentals, macro, calendars | `traderhub` | `traderhub` |
 | Symbol discovery, collected RSS, K-lines and bounded analysis | `alice` | `alice`, `alice-analysis` |
-| Peer addressing, Agent conversation, Inbox, Issues and provenance | `alice-workspace` | `alice-workspace` |
-| Issue files, schedules, headless delivery contracts | `.alice/issues/` + `alice-workspace issue` | `self-scheduling` |
+| Peer addressing, Agent conversation, Inbox, Issues and provenance | `alice` | `alice` |
+| Issue files, schedules, headless delivery contracts | `.alice/issues/` + `alice issue` | `self-scheduling` |
 | Accounts, positions, orders, trading-as-git | `alice-uta` | `alice-uta` |
 | Optional sources Alice does not ship | `opencli` | `opencli-reader` |
 
@@ -80,7 +80,7 @@ For long delegation, let the peer manage its work locally and return an
 ordinary reply; when the result also deserves human attention, have it commit
 the report and push the exact file to Inbox.
 
-The `alice-workspace` skill contains the exact commands. It also owns waiting
+The `alice` skill contains the exact commands. It also owns waiting
 rhythms, reconstruction rules, and the report-reading flow.
 
 ## Durable objects

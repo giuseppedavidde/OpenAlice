@@ -188,6 +188,10 @@ export const codexAdapter: CliAdapter = {
     // resumeHint. Then `codex resume <id>` (composeCommand) resumes by id.
     transcriptDiscovery: 'subprocess',
     headless: true,
+    // `codex app-server` speaks JSON-RPC over stdio; threads are created or
+    // resumed in-band, and command/file-change approvals round-trip to the
+    // browser under `approvalPolicy: onRequest`.
+    web: { wire: 'codex-app-server', permissionPrompts: true, freshSession: true },
     aiProvider: {
       credentialSource: 'runtime-or-workspace',
       wirePreference: ['openai-responses'],
@@ -248,7 +252,7 @@ export const codexAdapter: CliAdapter = {
   // Headless codex is CLI-MODE, NOT MCP: `codex exec` cancels EVERY MCP tool
   // call when there's no human to approve — even under approval_policy=never
   // (verified: "user cancelled MCP tool call") — so MCP is dead weight here.
-  // Instead the agent reads data via `alice` and reports via `alice-workspace`
+  // Instead the agent reads data and reports via the unified `alice` CLI
   // (shell commands codex runs autonomously). Three GLOBAL `-c` (before `exec`)
   // make that work:
   //   approval_policy=never                        — don't block on approval
@@ -288,6 +292,26 @@ export const codexAdapter: CliAdapter = {
       '--json',
       '--',
       prompt,
+    ];
+  },
+
+  // Web surface: `codex app-server --listen stdio://`. Session identity,
+  // approval policy, and sandbox are selected in-band by the transport
+  // (`thread/start` / `thread/resume` with `approvalPolicy: onRequest` and a
+  // workspace-write sandbox), so no TUI permission flags belong here. The
+  // network override keeps the injected `alice*` CLIs reachable from inside
+  // that sandbox, same as headless. MCP registration mirrors the TUI.
+  composeWebCommand(_base: readonly string[], ctx: SpawnContext): readonly string[] {
+    if (ctx.resume === 'last') throw new Error('the Web surface requires a concrete Codex thread id or a fresh Session');
+    return [
+      'codex',
+      ...(ctx.sessionRuntime?.webArgs ?? ctx.sessionRuntime?.interactiveArgs ?? []),
+      ...codexMcpConfigArgs(ctx),
+      '-c',
+      'sandbox_workspace_write.network_access=true',
+      'app-server',
+      '--listen',
+      'stdio://',
     ];
   },
 
@@ -667,18 +691,18 @@ function codexMcpHead(ctx: SpawnContext): string[] {
         `model_provider=${tomlString(CODEX_PROVIDER_NAME)}`,
       ]
     : [];
+  return ['codex', ...selection, ...CODEX_INTERACTIVE_PERMISSION_ARGS, ...codexMcpConfigArgs(ctx)];
+}
+
+/** `-c mcp_servers.*` overrides that register the launcher's MCP gateway. */
+function codexMcpConfigArgs(ctx: SpawnContext): string[] {
   const mcpUrl = ctx.env['OPENALICE_MCP_URL'];
-  if (!mcpUrl) {
-    return ['codex', ...selection, ...CODEX_INTERACTIVE_PERMISSION_ARGS];
-  }
+  if (!mcpUrl) return [];
   const workspaceId = ctx.env['AQ_WS_ID'];
   if (!workspaceId) {
     throw new Error('codex adapter: AQ_WS_ID missing from spawn env');
   }
   return [
-    'codex',
-    ...selection,
-    ...CODEX_INTERACTIVE_PERMISSION_ARGS,
     '-c',
     `mcp_servers.openalice.url="${mcpUrl}"`,
     '-c',

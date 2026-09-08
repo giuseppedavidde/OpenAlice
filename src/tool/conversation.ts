@@ -133,7 +133,7 @@ export async function askWorkspaceConversation(
       ...taskProjection(task, 'summary'),
       awaited: task.status !== 'running',
       ...(task.status === 'running'
-        ? { next: `alice-workspace conversation await --task-id ${task.taskId}` }
+        ? { next: `alice conversation await --task-id ${task.taskId}` }
         : {}),
     }
   } catch (err) {
@@ -283,7 +283,7 @@ export const conversationAwaitFactory: WorkspaceToolFactory = {
             ...taskProjection(task, 'summary'),
             awaited: task.status !== 'running',
             ...(task.status === 'running'
-              ? { next: `alice-workspace conversation read --task-id ${task.taskId}` }
+              ? { next: `alice conversation read --task-id ${task.taskId}` }
               : {}),
           }
         } catch (err) {

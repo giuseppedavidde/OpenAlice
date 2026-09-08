@@ -22,7 +22,7 @@ import {
   type AgentLaunchSelectorsHandle,
 } from '../components/workspace/AgentLaunchControls'
 import { TerminalView } from '../components/workspace/Terminal'
-import { WebPiView } from '../components/workspace/WebPiView'
+import { WebSessionView } from '../components/workspace/WebSessionView'
 import { ResumeCta } from '../components/workspace/ResumeCta'
 import { Button } from '../components/ui/button'
 import { useWorkspaces } from '../contexts/workspaces-context'
@@ -49,7 +49,7 @@ export function WorkspaceManagerPage({ spec }: { spec: ManagerSpec }) {
     refreshWorkspaceManager,
     quickStartWorkspaceManager,
     resumeSession,
-    openWebPiSession,
+    openWebSession,
   } = useWorkspaces()
   const openOrFocus = useWorkspace((state) => state.openOrFocus)
   const [draft, setDraft] = useState('')
@@ -136,7 +136,7 @@ export function WorkspaceManagerPage({ spec }: { spec: ManagerSpec }) {
     const terminalCanvas =
       session.state === 'running' &&
       (session.surface ?? 'terminal') === 'terminal'
-    const webPiCanvas = session.state === 'running' && session.agent === 'pi' && session.surface === 'webpi'
+    const webCanvas = session.state === 'running' && session.surface === 'webpi'
     const backButton = (
       <Button
         type="button"
@@ -153,26 +153,29 @@ export function WorkspaceManagerPage({ spec }: { spec: ManagerSpec }) {
     const runtimeBadge = (
       <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background px-2 py-1 text-[10px] leading-[14px] font-medium text-muted-foreground">
         <AgentRuntimeIcon agentId={session.agent} className="h-[11px] w-[11px]" />
-        {runtimeLabel(session.agent, agents)} {session.surface === 'webpi' ? 'WebPi' : 'TUI'}
+        {runtimeLabel(session.agent, agents)} {session.surface === 'webpi' ? 'Web' : 'TUI'}
       </span>
     )
 
     return (
       <div className={`workspaces-root flex h-full min-h-0 flex-col bg-background${terminalCanvas ? ' workspace-manager-terminal-canvas' : ''}`}>
-        {!terminalCanvas && !webPiCanvas && (
+        {!terminalCanvas && !webCanvas && (
           <PageTopBar title={session.title ?? session.name} leading={backButton} actions={runtimeBadge} />
         )}
         <div className={`flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden${terminalCanvas ? '' : ' p-2 md:p-3'}`}>
           {session.state === 'paused' ? (
             <ResumeCta
               record={session}
+              agents={agents}
               onResume={() => resumeSession(MANAGER_WORKSPACE_ID, session.id)}
-              onOpenWebPi={() => openWebPiSession(MANAGER_WORKSPACE_ID, session.id)}
+              onOpenWeb={() => openWebSession(MANAGER_WORKSPACE_ID, session.id)}
             />
-          ) : session.agent === 'pi' && session.surface === 'webpi' ? (
-            <WebPiView
+          ) : session.surface === 'webpi' ? (
+            <WebSessionView
               wsId={MANAGER_WORKSPACE_ID}
               sessionId={sessionId}
+              agent={session.agent}
+              agents={agents}
               label={t('workspaceManager.title')}
               headerActions={<>{backButton}{runtimeBadge}</>}
               onSessionLost={() => void refreshWorkspaceManager()}
@@ -186,7 +189,6 @@ export function WorkspaceManagerPage({ spec }: { spec: ManagerSpec }) {
               {...(terminalCanvas ? {
                 sessionLabel: session.title?.trim() || session.name,
                 headerActions: <>{backButton}{runtimeBadge}</>,
-                chrome: 'canvas' as const,
               } : {})}
               onSessionLost={() => void refreshWorkspaceManager()}
             />

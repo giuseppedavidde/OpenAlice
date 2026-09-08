@@ -90,10 +90,10 @@ d1 = bars("yfinance|BTC-USD", "1d", count=250, asset="crypto")
 ```
 → `{ "1h": 53.2, "4h": 48.9, "1d": 61.4 }`
 
-## Sibling verbs — dated reads & backtests
+## Sibling verbs — dated reads
 
 `quant` returns latest scalars with no dates. When you need the time axis or a
-hypothetical trade, reach for these instead (see the `retrospective` skill for
+dated research input, reach for these instead (see the `retrospective` skill for
 the full workflow):
 
 - **`alice analysis snapshot --query XLE [--asOf YYYY-MM-DD]`** — the honest
@@ -101,9 +101,6 @@ the full workflow):
   (close + vs-prevClose + day high/low + amplitude), compact levels, and a
   **freshness contract** (`isLatestActual` / `staleTradingDays`). Use this for
   "what does/did X look like", not a hand-rolled quant dump.
-- **`alice analysis simulate --query XLE --entryDate … --exitRule …`** —
-  backtest one entry + one exit (`trailing_stop`/`ma_break`/`stop`/`target`/
-  `hold`); returns entry/exit, returnPct, MFE/MAE.
 - **`alice analysis quant … --dates`** — opt-in date axis on a quant result
   (`dates[barId]` for one interval; `dates["barId@interval"]` when the same
   barId is used at multiple intervals), to map a dumped series back to days.

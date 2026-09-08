@@ -233,12 +233,12 @@ ordinary coworkers.
 Agents normally use:
 
 ```bash
-alice-workspace issue list
-alice-workspace issue show --id <id-or-title>
-alice-workspace issue create --title "..." --what "..." --when '{"kind":"every","every":"1h"}' --assignee @new-each-run --agent codex --credential openai-primary --model gpt-5.6-sol --effort high --timeout 30m
-alice-workspace issue update --id <id> --credential openai-primary --model gpt-5.6-sol --effort high
-alice-workspace issue update --id <id> --timeout 45m
-alice-workspace issue comment --id <id> --text "..."
+alice issue list
+alice issue show --id <id-or-title>
+alice issue create --title "..." --what "..." --when '{"kind":"every","every":"1h"}' --assignee @new-each-run --agent codex --credential openai-primary --model gpt-5.6-sol --effort high --timeout 30m
+alice issue update --id <id> --credential openai-primary --model gpt-5.6-sol --effort high
+alice issue update --id <id> --timeout 45m
+alice issue comment --id <id> --text "..."
 ```
 
 The CLI and MCP tools use the same implementation and write the same files.
@@ -400,14 +400,14 @@ Structured headless output is the live control-plane result, while Inbox is the
 durable user-delivery channel. A run with a meaningful report or artifact calls:
 
 ```bash
-alice-workspace inbox push --doc <path> --comments "<summary>"
+alice inbox push --doc <path> --comments "<summary>"
 ```
 
 The launcher binds the run/issue origin; the agent does not pass its own
 identity. Attached reports also receive a publication-time SHA-256 revision;
 the Inbox still renders the live file, but provenance can distinguish the sent
 revision from later edits. A no-change check should exit silently rather than
-generating Inbox noise. `alice-workspace inbox read` returns this safe provenance to internal
+generating Inbox noise. `alice inbox read` returns this safe provenance to internal
 agents as `origin` (`runId` / `sessionId`, `resumeId`, `issueId`, and `agent`
 when available). For append-only entries created before `resumeId` was stamped,
 the read path joins the stored run/session handle against the live registries;
@@ -426,12 +426,12 @@ remain valid and are never renamed. `taskId` remains one execution, while
 rather than silently pruned.
 
 Internal agents use the same product handle through the embedded collaboration
-path. `alice-workspace issue ask --id <name> --creator --prompt '<question>'`
+path. `alice issue ask --id <name> --creator --prompt '<question>'`
 queries Issue provenance first without making the caller extract a Workspace or
 resume id: it resumes the exact attributable Session,
 reconstructs with a fresh worker only when the Workspace is known and no
 Session origin exists, or returns unavailable without substituting another
-agent. `alice-workspace conversation read --task-id <id>` returns the latest
+agent. `alice conversation read --task-id <id>` returns the latest
 assistant reply by default; diagnostic tool/message blocks require
 `--mode detailed`. New task ids are short `run-xxxxxxxx` codes; existing UUID
 task ids remain readable.

@@ -133,7 +133,7 @@ export function annotateNameCollisions(workspaces: IssuesSnapshotWorkspace[]): s
 }
 
 // ==================== Flattened board rows (CLI / agent surface) ====================
-// The `alice-workspace issue list` (issue_list) agent surface wants the board as
+// The `alice issue list` (issue_list) agent surface wants the board as
 // ONE flat list of title rows tagged with their owning workspace — not the
 // per-workspace tree GET /api/issues returns. Each row keeps the snapshot's
 // display fields, replaces `when` with a plain `scheduled` boolean, and carries

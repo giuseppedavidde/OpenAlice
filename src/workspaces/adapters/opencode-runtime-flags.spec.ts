@@ -24,7 +24,8 @@ describe('opencode runtime flags', () => {
     );
 
     expect(projected.interactiveArgs).toEqual(['--model', 'openai/gpt-5.6-sol']);
-    expect(projected.webArgs).toEqual(['--model', 'openai/gpt-5.6-sol']);
+    expect(projected.webArgs).toEqual([]);
+    expect(JSON.parse(projected.env['OPENCODE_CONFIG_CONTENT']!)).toEqual({ model: 'openai/gpt-5.6-sol' });
     expect(projected.headlessArgs).toEqual([
       '--model', 'openai/gpt-5.6-sol',
       '--variant', 'high',
@@ -43,4 +44,10 @@ describe('opencode runtime flags', () => {
       sessionRuntime: projected,
     }, 'hello')).toContain('--variant');
   });
+});
+
+it('preserves process config while selecting the ACP model without unsupported flags', () => {
+  const projected = opencodeAdapter.sessionRuntime!.project({ cwd: '/workspace', env: { OPENCODE_CONFIG_CONTENT: '{"theme":"system"}' } }, runtime);
+  expect(JSON.parse(projected.env['OPENCODE_CONFIG_CONTENT']!)).toEqual({ theme: 'system', model: 'openai/gpt-5.6-sol' });
+  expect(opencodeAdapter.composeWebCommand!([], { cwd: '/workspace', env: projected.env, sessionRuntime: projected })).toEqual(['opencode', 'acp']);
 });

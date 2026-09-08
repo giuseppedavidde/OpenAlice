@@ -209,6 +209,12 @@ Load-bearing paths:
 
 - `src/workspaces/service.ts` — Workspace lifecycle and composition.
 - `src/workspaces/session-pool.ts` — PTY process ownership.
+- `src/workspaces/web-session-host.ts` and `src/workspaces/web-session/` —
+  the browser conversation surface: one long-lived structured-protocol
+  process per Session record, projected into a neutral snapshot. Transports
+  own the wire (`pi-rpc`, `acp`, `claude-stream-json`, `codex-app-server`);
+  adapters declare `capabilities.web` and compose the process command. The
+  persisted `SessionRecord.surface` value stays `webpi` for every runtime.
 - `src/workspaces/harness-surface-manager.ts` — managed Harness web processes,
   readiness, routes, logs, and cleanup.
 - `src/workspaces/session-registry.ts` — durable session metadata.
@@ -244,7 +250,7 @@ provenance link:
 
 Do not use a headless task id directly as a roster or process-attachment id,
 and do not create another `SessionRecord` when the same `resumeId` changes
-between headless, terminal, and WebPi execution. The run is execution
+between headless, terminal, and Web execution. The run is execution
 provenance; `resumeId` is the product identity; `SessionRecord` is its one
 durable launcher-owned roster record.
 
@@ -323,7 +329,7 @@ Inbox is the durable agent-to-user delivery surface. Agents publish reports or
 status by calling the injected `inbox_push` capability. Alice stamps the
 product Session and exact execution identity out-of-band. The user can return
 to the exact originating Session regardless of whether its first turn was
-headless or interactive; opening TUI/WebPi attaches a process to the existing
+headless or interactive; opening TUI/Web attaches a process to the existing
 durable Session record.
 
 ## Persistent State

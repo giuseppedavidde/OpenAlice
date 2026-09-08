@@ -48,7 +48,7 @@ import {
   initializeAutoQuantWorkspace as apiInitializeAutoQuantWorkspace,
   initializeAutoPredictionWorkspace as apiInitializeAutoPredictionWorkspace,
   initializeChatWorkspace as apiInitializeChatWorkspace,
-  openWebPiSession as apiOpenWebPiSession,
+  openWebSession as apiOpenWebSession,
   openResumeSession,
   pauseSession as apiPauseSession,
   quickChat as apiQuickChat,
@@ -555,9 +555,9 @@ export function WorkspacesProvider({ children }: { children: ReactNode }) {
     [ensureTerminalAppearancePublished, refresh, refreshWorkspaceManager, openOrFocus],
   )
 
-  const openWebPiSession = useCallback(
+  const openWebSession = useCallback(
     async (wsId: string, sessionId: string, source?: WorkspaceSource): Promise<void> => {
-      const snapshot = await apiOpenWebPiSession(wsId, sessionId)
+      const snapshot = await apiOpenWebSession(wsId, sessionId)
       const patch = {
         state: 'running' as const,
         surface: 'webpi' as const,
@@ -614,7 +614,7 @@ export function WorkspacesProvider({ children }: { children: ReactNode }) {
           : false
 
       // Deleting the Session currently on screen has a deterministic landing:
-      // its Workspace-level Session library. Open/focus that hub before closing
+      // its Workspace-level new-conversation composer. Open/focus that hub before closing
       // the pinned tab so closeTab's neighbour rule cannot send the user to an
       // unrelated editor.
       if (focusedOwnsSession) {
@@ -792,7 +792,7 @@ export function WorkspacesProvider({ children }: { children: ReactNode }) {
     quickChat,
     pauseSession,
     resumeSession,
-    openWebPiSession,
+    openWebSession,
     requestDeleteSession,
     setSessionPresence,
     setSessionDisplayName,
@@ -817,7 +817,7 @@ export function WorkspacesProvider({ children }: { children: ReactNode }) {
     listError,
     openAgentConfig,
     openHeadlessRun,
-    openWebPiSession,
+    openWebSession,
     pauseSession,
     quickChat,
     quickStartWorkspaceManager,

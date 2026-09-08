@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { readFile, realpath } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -188,6 +189,11 @@ export const claudeAdapter: CliAdapter = {
     resumeById: true,
     transcriptDiscovery: 'fs-watch',
     headless: true,
+    // Bidirectional stream-json keeps one `claude -p` alive across turns and
+    // routes tool permission prompts over stdio (`--permission-prompt-tool
+    // stdio`). `--session-id <uuid>` creates the session on a fresh Session so
+    // the same id resumes in the TUI later.
+    web: { wire: 'claude-stream-json', permissionPrompts: true, freshSession: true },
     aiProvider: {
       credentialSource: 'runtime-or-workspace',
       wirePreference: ['anthropic'],
@@ -281,6 +287,31 @@ export const claudeAdapter: CliAdapter = {
       ...(ctx.resume ? ['--resume', ctx.resume.sessionId] : []),
       '-p', '--output-format', 'stream-json', '--verbose',
       '--', prompt,
+    ];
+  },
+
+  // Web surface: bidirectional stream-json. `--input-format stream-json` keeps
+  // the process alive between turns, `--include-partial-messages` streams text
+  // deltas, and `--permission-prompt-tool stdio` turns tool permission prompts
+  // into `control_request` frames the transport can present in the browser
+  // (no `--allowedTools` here: a human is attached). A fresh Session mints its
+  // uuid up front so `--resume <id>` reopens the identical conversation in the
+  // TUI afterwards. MCP still rides the workspace `.mcp.json` via the same
+  // autotrust settings as the TUI.
+  composeWebCommand(base: readonly string[], ctx: SpawnContext): readonly string[] {
+    if (ctx.resume === 'last') throw new Error('the Web surface requires a concrete Claude session id or a fresh Session');
+    return [
+      ...base,
+      '--settings', AUTOTRUST_SETTINGS,
+      ...(ctx.sessionRuntime?.webArgs ?? ctx.sessionRuntime?.interactiveArgs ?? []),
+      ...(ctx.appendSystemPrompt ? ['--append-system-prompt', ctx.appendSystemPrompt] : []),
+      ...(ctx.resume ? ['--resume', ctx.resume.sessionId] : ['--session-id', randomUUID()]),
+      '-p',
+      '--input-format', 'stream-json',
+      '--output-format', 'stream-json',
+      '--verbose',
+      '--include-partial-messages',
+      '--permission-prompt-tool', 'stdio',
     ];
   },
 

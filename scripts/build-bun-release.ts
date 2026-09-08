@@ -279,13 +279,13 @@ async function smokeRelease(options: {
     port: 0,
     fetch(request) {
       const url = new URL(request.url)
-      if (url.pathname === '/cli/ws-release/workspace/manifest') {
+      if (url.pathname === '/cli/ws-release/data/manifest') {
         return Response.json({
           groups: { issue: { list: { tool: 'workspace_issue_list', schema: { type: 'object', properties: {} } } } },
           groupDescriptions: { issue: 'Issue coordination' },
         })
       }
-      if (url.pathname === '/cli/ws-release/workspace/invoke' && request.method === 'POST') {
+      if (url.pathname === '/cli/ws-release/data/invoke' && request.method === 'POST') {
         return Response.json({ content: [{ type: 'text', text: 'BUN_WORKSPACE_CLI_OK' }] })
       }
       return Response.json({ error: 'not found' }, { status: 404 })

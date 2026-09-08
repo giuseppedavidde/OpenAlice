@@ -199,6 +199,10 @@ export const cursorAdapter: CliAdapter = {
     resumeById: true,
     transcriptDiscovery: 'subprocess',
     headless: true,
+    // `cursor-agent acp` is a native Agent Client Protocol agent: sessions are
+    // created/loaded in-band and tool permissions arrive as
+    // `session/request_permission`.
+    web: { wire: 'acp', permissionPrompts: true, freshSession: true },
     aiProvider: {
       credentialSource: 'runtime-or-workspace',
       // Cursor Dashboard credentials stay in the shared provider vault, but
@@ -232,6 +236,20 @@ export const cursorAdapter: CliAdapter = {
       return cmd;
     }
     return [...cmd, ...cursorResumeArgs(ctx.resume)];
+  },
+
+  // Web surface: `cursor-agent [global flags] acp`. Global options (model,
+  // trust) precede the subcommand, as in Cursor's own ACP documentation
+  // (`agent --api-key … acp`). Resume/new is negotiated in ACP
+  // (`session/load` / `session/new`), so no resume flag belongs here.
+  composeWebCommand(_base: readonly string[], ctx: SpawnContext): readonly string[] {
+    if (ctx.resume === 'last') throw new Error('the Web surface requires a concrete Cursor session id or a fresh Session');
+    return [
+      'cursor-agent',
+      ...(ctx.sessionRuntime?.webArgs ?? ctx.sessionRuntime?.interactiveArgs ?? []),
+      ...(ctx.approveProject ? ['--trust'] : []),
+      'acp',
+    ];
   },
 
   composeHeadlessCommand(

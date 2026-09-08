@@ -10,7 +10,7 @@ description: >
   money?", "replay the SMH spike — policy or earnings?", "was there an entry
   signal at the time", "would an 8% trailing stop have saved me", "event study
   on the Hormuz escalation". It strings together the as-of snapshot, the
-  date-windowed news, and the backtest into one honest replay — and it is
+  date-windowed news, and Workspace research code into one honest replay — and it is
   ruthless about data freshness, because a retro built on a stale or
   future-leaking price is worse than no retro.
 ---
@@ -23,7 +23,7 @@ is honesty: **no lookahead** (never use a price the moment didn't yet know) and
 **no stale data** (never report yesterday's close as "now").
 
 The tools (run them — don't answer from memory):
-`alice analysis snapshot`, `alice analysis simulate`, `alice rss window`,
+`alice analysis snapshot`, `alice rss window`,
 `alice rss grep` / `read`. (See the `alice`, `alice-analysis` skills for the
 quant scripting language.)
 
@@ -71,20 +71,14 @@ it.**
    Barchart options flow, Reddit sentiment — are unreachable from a headless
    run; if the call needs them, flag the gap rather than imply full coverage.)
 
-3. **Test the entry (backtest the hypothesis).** "If I'd bought at the anchor,
-   would a stop/exit have worked?"
-   ```bash
-   alice analysis simulate --query XLE --entryDate 2026-04-03 \
-     --exitRule trailing_stop --exitPct 8
-   # also try: --exitRule ma_break --exitPeriod 50   (trend exit)
-   #           --exitRule hold                        (just measure to now)
-   ```
-   Read `entry`/`exit` (date·price·reason), `returnPct`, and **MFE/MAE** (the
-   best and worst it went while you held — the round trip a single end-number
-   hides). `open: true` means it never triggered the exit; the return is
-   mark-to-market, not realized. Compare a couple of exit rules — the
-   interesting finding is usually "the move was real but giving it back to a
-   loose stop ate most of it", or vice-versa.
+3. **Test the hypothesis in Workspace research code.** If the question needs
+   a hypothetical trade, save the dated inputs and write an inspectable script
+   with the native Coding Agent. Pin the source and evaluation window. State
+   signal timing, executable entry/exit prices, position sizing, fees and
+   slippage explicitly. Do not use a closing-price signal to assume an
+   executable fill at that same close. Exclude pre-entry price extremes from
+   holding-period MFE/MAE. Save the script, inputs and results together so the
+   assumptions can be changed and the calculation reproduced.
 
 4. **Map the index to dates when you need the path in a quant script.** Most
    reads are covered by snapshot; when you must compute over the series and want

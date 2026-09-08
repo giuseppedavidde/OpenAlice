@@ -119,7 +119,7 @@ categories.
 
 ```text
 Workspace agent
-  -> alice-workspace inbox push (CLI)
+  -> alice inbox push (CLI)
   -> InboxStore durable JSONL append
   -> non-blocking Alice bridge
   -> Connector Service on loopback

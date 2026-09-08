@@ -232,7 +232,7 @@ export interface WorkspaceToolContext {
    *  issue. Absent (interactive session, or no header) → undefined. */
   origin?: InboxOrigin
   /** GLOBAL issue-board reader — the cross-workspace board the
-   *  `alice-workspace` CLI surfaces (issue_list / issue_show read EVERY
+   *  `alice` CLI surfaces (issue_list / issue_show read EVERY
    *  workspace's issues, not just the caller's). Backed by the live
    *  WorkspaceService at the two build sites (cli.ts, mcp.ts). OPTIONAL: a
    *  context without a service (older callers, unit tests) omits it, and the
@@ -245,6 +245,7 @@ export interface WorkspaceToolContext {
   }
   /** Safe current-Workspace template preview/apply surface. */
   templateUpgrades?: WorkspaceTemplateUpgradeControl
+  aliceHarnessUpgrades?: WorkspaceTemplateUpgradeControl
   /** Rename a product Session in this Workspace. Empty/null clears the nametag. */
   setSessionDisplayName?: (input: {
     readonly resumeId: string

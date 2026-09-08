@@ -35,7 +35,7 @@ low-frequency/reference research
   -> typed local fallback when supported
 
 K-lines and quantitative work
-  -> alice analysis search-bars/snapshot/quant/simulate
+  -> alice analysis search-bars/snapshot/quant
   -> BarService
   -> vendor source or UTA broker source selected by barId
 ```
@@ -148,3 +148,18 @@ When changing bars or reference contracts, also run their focused suites and
 exercise the corresponding `traderhub` or `alice analysis` CLI path. Keyed or
 network tests require explicit test credentials and must not become a silent
 prerequisite of the normal unit suite.
+
+## Collected RSS archive
+
+`alice rss glob` and `grep` search all available items in the collector's recent
+index within the requested lookback before applying the output limit (default
+500 matching items, oldest-first). `window` likewise filters the available
+index before applying its output cap. The index is bounded by collector
+`maxInMemory` and recovery `retentionDays`; it is not a full-history disk search.
+
+`alice rss read --id` resolves the durable JSONL sequence ID. Recent entries use
+the memory index; evicted entries are read by streaming the archive on disk.
+This read path survives index eviction and restart without a persisted format
+change. It returns stored feed content, which may be only a summary, and does
+not fetch the publisher webpage. Empty search results establish only that no
+match exists in the available subscribed-feed index.

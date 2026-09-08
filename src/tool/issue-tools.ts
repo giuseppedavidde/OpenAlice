@@ -5,7 +5,7 @@
  * entity_upsert): the agent sees a schema WITHOUT any `wsId`, and the workspace
  * identity is closed over by the factory from the gateway URL (`/cli/:wsId` or
  * `/mcp/:wsId`). Registering each factory once makes it reachable via BOTH the
- * `alice-workspace issue …` CLI (the primary agent surface) AND MCP (one
+ * `alice issue …` CLI (the primary agent surface) AND MCP (one
  * adapter) for free — the gateway builds and dispatches both through the same
  * WorkspaceToolCenter.
  *
@@ -300,7 +300,7 @@ function summarizeIssueRows(
       ...(row.error ? { error: row.error } : {}),
     })),
     hint:
-      'Summary shows local issues plus active urgent/high/medium rows. Use `alice-workspace issue list --mode detailed` for the full board, then `alice-workspace issue show --id <id>` before acting.',
+      'Summary shows local issues plus active urgent/high/medium rows. Use `alice issue list --mode detailed` for the full board, then `alice issue show --id <id>` before acting.',
   }
 }
 
@@ -496,7 +496,7 @@ export const issueCreateFactory: WorkspaceToolFactory = {
         'unscheduled board item defaults to `@unassigned`. An attributable',
         'resumable caller still owns the Issue as `@me`.',
         'A scheduled run is unattended: if its result is meant for the human,',
-        'What must explicitly tell it to use `alice-workspace inbox push`.',
+        'What must explicitly tell it to use `alice inbox push`.',
       ].join('\n'),
       inputSchema: z.object({
         title: z.string().min(1).describe('Short human title (required).'),
@@ -587,7 +587,7 @@ export const issueListFactory: WorkspaceToolFactory = {
       }),
       execute: async ({ mode, limit }) => {
         // GLOBAL board when the service-backed reader is wired (the
-        // `alice-workspace` surface). Reads EVERY workspace's issues.
+        // `alice` surface). Reads EVERY workspace's issues.
         if (ctx.board) {
           const snapshot = await ctx.board.snapshot()
           const { rows, invalid } = flattenBoardRows(snapshot)

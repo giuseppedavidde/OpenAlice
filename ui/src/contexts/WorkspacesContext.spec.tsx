@@ -28,7 +28,7 @@ const mocks = vi.hoisted(() => ({
   getWorkspaceManager: vi.fn(),
   pauseSession: vi.fn(),
   resumeSession: vi.fn(),
-  openWebPiSession: vi.fn(),
+  openWebSession: vi.fn(),
   quickChat: vi.fn(),
   deleteSession: vi.fn(),
   getWorkspaceState: vi.fn(),
@@ -59,7 +59,7 @@ vi.mock('../components/workspace/api', async (importOriginal) => {
     getWorkspaceManager: mocks.getWorkspaceManager,
     pauseSession: mocks.pauseSession,
     resumeSession: mocks.resumeSession,
-    openWebPiSession: mocks.openWebPiSession,
+    openWebSession: mocks.openWebSession,
     quickChat: mocks.quickChat,
     deleteSession: mocks.deleteSession,
   }
@@ -146,7 +146,7 @@ function ManagerProbe() {
     workspaceManager,
     pauseSession,
     resumeSession,
-    openWebPiSession,
+    openWebSession,
     requestDeleteSession,
   } = useWorkspaces()
   const session = workspaceManager?.sessions[0]
@@ -156,7 +156,7 @@ function ManagerProbe() {
       <span>{session.title}</span>
       <button type="button" onClick={() => void pauseSession(MANAGER_WORKSPACE_ID, session.id)}>Pause manager</button>
       <button type="button" onClick={() => void resumeSession(MANAGER_WORKSPACE_ID, session.id)}>Resume manager</button>
-      <button type="button" onClick={() => void openWebPiSession(MANAGER_WORKSPACE_ID, session.id)}>Open manager WebPi</button>
+      <button type="button" onClick={() => void openWebSession(MANAGER_WORKSPACE_ID, session.id)}>Open manager Web</button>
       <button type="button" onClick={() => requestDeleteSession(MANAGER_WORKSPACE_ID, session.id)}>Delete manager</button>
     </div>
   )
@@ -198,7 +198,7 @@ beforeEach(async () => {
   mocks.getWorkspaceManager.mockResolvedValue(managerSnapshot())
   mocks.pauseSession.mockResolvedValue(true)
   mocks.resumeSession.mockResolvedValue(null)
-  mocks.openWebPiSession.mockResolvedValue({ pid: 43, startedAt: 3 })
+  mocks.openWebSession.mockResolvedValue({ pid: 43, startedAt: 3 })
   mocks.quickChat.mockResolvedValue({
     workspace: workspace(),
     session: {
@@ -228,7 +228,7 @@ beforeEach(async () => {
 afterEach(cleanup)
 
 describe('WorkspacesProvider conversation routing', () => {
-  it('adopts an explicit WebPi surface returned by quick-chat', async () => {
+  it('adopts an explicit Web surface returned by quick-chat', async () => {
     mocks.listWorkspaces
       .mockResolvedValueOnce([workspace()])
       .mockImplementation(() => new Promise(() => undefined))
@@ -297,8 +297,8 @@ describe('WorkspacesProvider conversation routing', () => {
       params: { sessionId: 'opencode-manager-session' },
     }))
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open manager WebPi' }))
-    await waitFor(() => expect(mocks.openWebPiSession).toHaveBeenCalledWith(
+    fireEvent.click(screen.getByRole('button', { name: 'Open manager Web' }))
+    await waitFor(() => expect(mocks.openWebSession).toHaveBeenCalledWith(
       MANAGER_WORKSPACE_ID,
       'opencode-manager-session',
     ))
@@ -312,7 +312,7 @@ describe('WorkspacesProvider conversation routing', () => {
     ))
   })
 
-  it('lands a deleted focused Session on its Workspace Session library', async () => {
+  it('lands a deleted focused Session on its Workspace new-conversation composer', async () => {
     const focusedSession = persistentSession()
     mocks.listWorkspaces.mockResolvedValue([{ ...workspace(), sessions: [focusedSession] }])
     mocks.getWorkspaceState.mockReturnValue({

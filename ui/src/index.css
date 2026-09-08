@@ -161,6 +161,43 @@ body {
    reserve ambient loops for real live/loading state. Pointer cursors are global
    because a clickable control should never make the user guess. */
 
+/* Unread is a quiet informational cue, not an alarm or selected state.
+   Shared by the global Inbox count and both Inbox list presentations. */
+.oa-inbox-unread-count {
+  color: color-mix(in srgb, var(--info) 60%, var(--sidebar-foreground));
+  background: color-mix(in srgb, var(--info) 12%, var(--sidebar));
+}
+.oa-inbox-unread-dot {
+  background: color-mix(in srgb, var(--info) 70%, var(--muted-foreground));
+}
+
+/* Expanded desktop navigation has one inset per hierarchy level. Keep these
+   density rules out of the compact rail and touch navigation. */
+@media (pointer: coarse) {
+  .oa-sidebar-child-row { min-height: 40px; }
+}
+@media (min-width: 768px) and (hover: hover) and (pointer: fine) {
+  #activity-bar:not([data-rail-layout="compact"]) .oa-nav-item {
+    min-height: 30px;
+    padding-inline: 8px;
+    gap: 8px;
+  }
+  #activity-bar .oa-harness-nav-header { min-height: 30px; }
+  #activity-bar .oa-harness-nav-actions > button { height: 28px; }
+  #activity-bar .oa-harness-nav-children { margin-left: 8px; padding-bottom: 4px; }
+  #activity-bar .oa-harness-nav-children .oa-sidebar-child-row {
+    margin-inline: 0;
+    min-height: 30px;
+    padding-block: 4px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .oa-harness-studio-entry .oa-studio-arrow { opacity: 0; }
+  .oa-harness-studio-entry > button:hover .oa-studio-arrow,
+  .oa-harness-studio-entry > button:focus-visible .oa-studio-arrow { opacity: 1; }
+}
+
 :where(button, [role="button"], summary, a[href], select):not(:disabled):not([aria-disabled="true"]) {
   cursor: pointer;
 }
@@ -370,12 +407,36 @@ body {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 3.5%, transparent);
 }
 
-.oa-session-row:has(.oa-session-row-main:focus-visible) {
+.oa-sidebar-child-row:has(.oa-sidebar-child-row-main:focus-visible) {
   background: var(--accent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent);
 }
 
 @media (hover: hover) and (pointer: fine) {
+  /* Keep actions keyboard-reachable; focus reveals them before activation. */
+  .oa-application-menu-more {
+    opacity: 0;
+    transition: opacity var(--motion-fast);
+  }
+
+  .oa-application-menu:hover .oa-application-menu-more,
+  .oa-application-menu:focus-visible .oa-application-menu-more,
+  .oa-application-menu[aria-expanded="true"] .oa-application-menu-more {
+    opacity: 1;
+  }
+
+  .oa-harness-nav-actions {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .oa-harness-nav-header:hover .oa-harness-nav-actions,
+  .oa-harness-nav-header:focus-within .oa-harness-nav-actions,
+  .oa-harness-nav-actions:has([aria-expanded="true"]) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
   .oa-session-overflow-action {
     position: absolute;
     inset-inline-end: 0.5rem;
@@ -1700,4 +1761,20 @@ html[lang="ja"] .oa-onboarding-title {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Base UI owns measurement and mount lifetime; hidden panels leave the tab order. */
+.oa-collapsible-panel {
+  height: var(--collapsible-panel-height);
+  overflow: hidden;
+  opacity: 1;
+  transition: height 180ms var(--motion-ease-out), opacity 180ms var(--motion-ease-out);
+}
+.oa-collapsible-panel[data-starting-style],
+.oa-collapsible-panel[data-ending-style] {
+  height: 0;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .oa-collapsible-panel { transition: none; }
 }

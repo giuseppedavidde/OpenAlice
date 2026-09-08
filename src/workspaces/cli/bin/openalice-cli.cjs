@@ -17,7 +17,7 @@
  * which works from this CommonJS payload on every supported Node runtime.
  *
  *   alice                              list command groups (data export)
- *   alice-workspace inbox push ...     collaboration export
+ *   alice inbox push ...     collaboration export
  *   <bin> <group> <verb> --help        show a verb's flags
  *   <bin> <group> <verb> [--flags]     run it; JSON to stdout
  */
@@ -36,7 +36,11 @@ async function main() {
     (process.argv[1] || 'alice').split(/[\\/]/).pop() ||
     'alice'
   ).split(/[\\/]/).pop() || 'alice'
-  const exportKey = BIN === 'alice' ? 'data' : BIN.replace(/^alice-/, '')
+  if (BIN === 'alice-workspace') {
+    console.error('alice-workspace is a compatibility alias; use alice <group> <verb>.')
+    BIN = 'alice'
+  }
+  const exportKey = (BIN === 'alice' || BIN === 'alice-workspace') ? 'data' : BIN.replace(/^alice-/, '')
 
   const toolSocket = process.env.OPENALICE_TOOL_SOCKET
   const toolUrl = process.env.OPENALICE_TOOL_URL

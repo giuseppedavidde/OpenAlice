@@ -18,7 +18,7 @@ describe('buildPackagedToolchainSmokePlan', () => {
   it('builds a macOS packaged Electron + Pi smoke plan', () => {
     const root = mkdtempSync(join(tmpdir(), 'openalice-toolchain-mac-'))
     try {
-      const appRoot = join(root, 'OpenAlice.app/Contents/Resources/app')
+      const appRoot = join(root, 'OpenAlice.app/Contents/Resources/runtime')
       touch(join(root, 'OpenAlice.app/Contents/MacOS/OpenAlice'))
       const plan = buildPackagedToolchainSmokePlan({
         ok: true,
@@ -63,7 +63,7 @@ describe('buildPackagedToolchainSmokePlan', () => {
   it('adds Windows managed Git Bash command probes', () => {
     const root = mkdtempSync(join(tmpdir(), 'openalice-toolchain-win-'))
     try {
-      const appRoot = join(root, 'win-unpacked/resources/app')
+      const appRoot = join(root, 'win-unpacked/resources/runtime')
       touch(join(root, 'win-unpacked/OpenAlice.exe'))
       const plan = buildPackagedToolchainSmokePlan({
         ok: true,
@@ -131,7 +131,7 @@ describe('buildPackagedToolchainSmokePlan', () => {
     const plan = buildPackagedToolchainSmokePlan({
       ok: true,
       errors: [],
-      appRoot: '/tmp/missing/OpenAlice.app/Contents/Resources/app',
+      appRoot: '/tmp/missing/OpenAlice.app/Contents/Resources/runtime',
       platform: 'darwin',
       platformArch: null,
       manifest: {

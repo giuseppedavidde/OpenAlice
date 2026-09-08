@@ -22,7 +22,7 @@ import { inboxReadFactory } from '../tool/inbox-read.js'
 import { workspacePathFactory } from '../tool/workspace-path.js'
 import { workspaceSessionsFactory } from '../tool/workspace-sessions.js'
 import { workspaceListFactory } from '../tool/workspace-list.js'
-import { workspaceTemplateUpgradeFactory } from '../tool/workspace-template-upgrade.js'
+import { workspaceTemplateUpgradeFactory, aliceHarnessUpgradeFactory } from '../tool/workspace-template-upgrade.js'
 import { entityUpsertFactory } from '../tool/entity-upsert.js'
 import { entitySearchFactory } from '../tool/entity-search.js'
 import { issueToolFactories } from '../tool/issue-tools.js'
@@ -55,12 +55,26 @@ describe('CLI_EXPORTS — data export (global tools)', () => {
 
   it('every mapped verb resolves to a registered global tool', () => {
     for (const name of mappedToolNames('data')) {
+      if (mappedToolNames('workspace').has(name)) continue
       expect(tc.get(name), `data CLI maps to missing tool: ${name}`).not.toBeNull()
     }
   })
 
-  it('is scope: global', () => {
-    expect(getExport('data')?.scope).toBe('global')
+  it('does not export generic calculation or fixed trade simulation', () => {
+    expect(mappedToolNames('data')).not.toContain('calculate')
+    expect(mappedToolNames('data')).not.toContain('simulate')
+    expect(getExport('data')?.groupDescriptions).not.toHaveProperty('think')
+  })
+
+  it('includes every collaboration group at the top level without changing its map', () => {
+    for (const [group, verbs] of Object.entries(CLI_EXPORTS.workspace.commands)) {
+      expect(CLI_EXPORTS.data.commands[group]).toEqual(verbs)
+    }
+    expect(CLI_EXPORTS.data.commands).not.toHaveProperty('workspace')
+  })
+
+  it('combines registry scopes', () => {
+    expect(getExport('data')?.scope).toBe('mixed')
   })
 })
 
@@ -96,6 +110,7 @@ describe('CLI_EXPORTS — workspace export (scoped collaboration tools)', () => 
   wtc.register(workspaceSessionsFactory)
   wtc.register(workspaceListFactory)
   wtc.register(workspaceTemplateUpgradeFactory)
+  wtc.register(aliceHarnessUpgradeFactory)
   wtc.register(entityUpsertFactory)
   wtc.register(entitySearchFactory)
   for (const f of issueToolFactories) wtc.register(f)
@@ -150,7 +165,7 @@ describe('CLI_EXPORTS — structure', () => {
     const global = mappedToolNamesForScope('global')
     const scoped = mappedToolNamesForScope('scoped')
     expect(global).toEqual(new Set([
-      ...mappedToolNames('data'),
+      ...[...mappedToolNames('data')].filter(n => !scoped.has(n)),
       ...mappedToolNames('traderhub'),
       ...mappedToolNames('uta'),
     ]))
@@ -160,11 +175,11 @@ describe('CLI_EXPORTS — structure', () => {
 
   it('maps a binary name to its export key (alice -> data, alice-<x> -> <x>)', () => {
     expect(exportKeyForBinary('alice')).toBe('data')
-    expect(exportKeyForBinary('alice-workspace')).toBe('workspace')
+    expect(exportKeyForBinary('alice-workspace')).toBe('data')
     expect(exportKeyForBinary('alice-uta')).toBe('uta')
     // round-trips: each export's declared binary resolves back to its key
     for (const [key, exp] of Object.entries(CLI_EXPORTS)) {
-      expect(exportKeyForBinary(exp.binary)).toBe(key)
+      expect(exportKeyForBinary(exp.binary)).toBe(key === 'workspace' ? 'data' : key)
     }
   })
 

@@ -722,7 +722,7 @@ intentionally parameter-free:
   80-column baseline. Its Create row opens a two-stage AliceProject Foundry:
   Identity and Complete Home remain visible beside the focused Field Inspector
   on wide terminals and stack as a compact route at 80 columns. Validation
-  remains ordered, and only the final `Create & select` action registers the
+  remains ordered, and only the final `Create & start` action registers the
   new complete home. AI vault copy is a separate command:
   `openalice project copy-ai-creds`;
 - `p` opens Setup for data home, browser port, update checks, and resolved
@@ -898,7 +898,12 @@ switches the live Supervisor view and records it as the next bare-start
 default; it does not stop, move, copy, or delete another project. Creating an
 AliceProject collects a validated lowercase key and separate complete home
 inside the TUI, rejects equal or nested registered homes, and selects the new
-entry atomically. An existing target must be empty or recognizable as an
+entry atomically. The final Workspaces step defaults to Chat, allows optional
+Auto Quant and Auto Prediction (or none), then starts the selected project.
+The backend prepares those durable instances before the first page opens;
+Agent Sessions remain stopped. Failed preparation can be retried from Quick
+Start. CLI `create alice-project --workspaces` records the same selection
+for the next start. See [[docs/alice-project.md]]. An existing target must be empty or recognizable as an
 OpenAlice complete home; an unrelated non-empty directory is rejected. A new
 target is created and canonicalized when registered, so a later missing
 registered Home is never silently recreated. A bare TUI launch falls back to

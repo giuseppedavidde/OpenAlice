@@ -1,8 +1,7 @@
 ---
 name: alice
 description: >
-  Research & data on your shell PATH via the `alice` CLI — THIS WORKBENCH's
-  read surfaces: the collected-RSS archive (`alice rss`), cross-asset symbol
+  Research and Workspace collaboration through the `alice` CLI. Data surfaces: the collected-RSS archive (`alice rss`), cross-asset symbol
   search (`alice market search` → barIds), and K-line quant analysis
   (`alice analysis`). Use for: "grep the collected feeds for the Fed", "find
   the barId for AAPL", "compute RSI on this chart", "I can't find a Taiwan/CN
@@ -11,18 +10,21 @@ description: >
   (Low-frequency market data — fundamentals, macro series, calendars, boards —
   is the separate `traderhub` CLI; the quant scripting manual is the
   `alice-analysis` skill.)
+  Also use alice for Workspace collaboration: peer discovery, Agent conversations,
+  Inbox delivery, Issues, Session identity, tracked assets and template upgrades.
+  Read references/collaboration.md for these workflows.
 ---
 
-# Research & data — `alice`
+# Research & collaboration — `alice`
 
-`alice` is OpenAlice's read surface on your PATH. Output is JSON on stdout
+`alice` is OpenAlice's research and collaboration interface on your PATH. Output is JSON on stdout
 (pipe it: `alice market search --query AAPL | jq '.results[0]'`); a non-zero
 exit means it failed, with the reason on stderr.
 
 ## Discover, don't guess
 
 ```bash
-alice --help                       # the groups: rss, market, analysis, think
+alice --help                       # discover research and collaboration groups
 alice <group> <verb> --help        # a verb's flags (which are required)
 ```
 
@@ -80,3 +82,14 @@ search-bars` (find a K-line barId) then `alice analysis quant` (compute). It's a
 small scripting language with a full function catalog, multi-timeframe panels,
 and source selection. **See the `alice-analysis` skill** for the manual; don't
 hand-roll indicators here.
+
+## Collaboration and durable assets
+
+The same `alice` CLI also owns `peer`, `conversation`, `inbox`, `issue`,
+`provenance`, `signature`, `session`, `track`, and `template`. These are top-level
+groups, not an `alice workspace` subcommand.
+
+Read [the collaboration reference](references/collaboration.md) before sending
+messages, delivering reports or managing durable work. Workspace and Session
+identity are supplied by the launch context. Use live `alice --help` to discover
+commands and flags.
