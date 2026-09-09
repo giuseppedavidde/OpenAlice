@@ -1,7 +1,8 @@
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible'
 import { useEffect, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
-import { X } from 'lucide-react'
+import { ChevronDown, X } from 'lucide-react'
 import { type AssetClass, type BarSourceCandidate } from '../api/market'
 import { useAssetSearch } from './market/useAssetSearch'
 import { useWorkspace } from '../tabs/store'
@@ -46,6 +47,7 @@ export function MarketSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [query, setQuery] = useState('')
+  const [watchlistOpen, setWatchlistOpen] = useState(true)
   // Shared with the main search box — one search logic, no drift.
   const { results, loading } = useAssetSearch(query)
   const [highlight, setHighlight] = useState(0)
@@ -164,6 +166,56 @@ export function MarketSidebar({ onNavigate }: { onNavigate?: () => void }) {
             active={isFocused('market-list')}
             onClick={() => openOrFocus({ kind: 'market-list', params: {} })}
           />
+          <Collapsible open={watchlistOpen} onOpenChange={setWatchlistOpen}>
+            <CollapsibleTrigger aria-label={t('market.watchlist')} className="oa-nav-row group mx-2 flex min-h-10 w-[calc(100%-1rem)] items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] leading-[18px] text-sidebar-foreground hover:bg-sidebar-accent/60 focus-visible:outline-2 focus-visible:outline-ring md:min-h-8">
+              <span>{t('market.watchlist')}</span>
+              {watchlist.length > 0 && <span className="text-[11px] tabular-nums text-muted-foreground">{watchlist.length}</span>}
+              <ChevronDown aria-hidden className="ml-auto size-3.5 text-muted-foreground transition-transform duration-[180ms] group-aria-[expanded=false]:-rotate-90 motion-reduce:transition-none" />
+            </CollapsibleTrigger>
+            <CollapsibleContent aria-hidden={!watchlistOpen} inert={!watchlistOpen}>
+              <div className="ml-3 border-l border-border/50">
+                {watchlist.length === 0 ? (
+                  <p className="px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">
+                    {t('market.emptyWatchlistHint')}
+                  </p>
+                ) : (
+                  watchlist.map((entry) => (
+                    <SidebarRow
+                      key={`${entry.assetClass}:${entry.symbol}`}
+                      label={<span className="font-mono font-semibold truncate">{entry.symbol}</span>}
+                      active={isFocusedDetail(entry.assetClass, entry.symbol)}
+                      onClick={() =>
+                        openOrFocus({
+                          kind: 'market-detail',
+                          params: { assetClass: entry.assetClass, symbol: entry.symbol },
+                        })
+                      }
+                      trail={
+                        <>
+                          <AssetClassChip cls={entry.assetClass} />
+                          <Button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              removeFromWatchlist(entry.assetClass, entry.symbol)
+                            }}
+                            variant="ghost"
+                            size="icon-sm"
+                            className="text-muted-foreground/70 hover:text-destructive focus-visible:text-destructive"
+                            aria-label={t('market.removeFromWatchlist', { symbol: entry.symbol })}
+                          >
+                            <X className="size-3" aria-hidden />
+                          </Button>
+                        </>
+                      }
+                    />
+                  ))
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </MarketSection>
+        <MarketSection label={t('market.analyticsSection')}>
           <SidebarRow
             label={t('market.boardMovers')}
             active={focusedSpec?.kind === 'market-board' && focusedSpec.params.board === 'movers'}
@@ -206,47 +258,6 @@ export function MarketSidebar({ onNavigate }: { onNavigate?: () => void }) {
             active={focusedSpec?.kind === 'market-board' && focusedSpec.params.board === 'shipping'}
             onClick={() => openOrFocus({ kind: 'market-board', params: { board: 'shipping' } })}
           />
-        </MarketSection>
-
-        {/* Watchlist */}
-        <MarketSection label={t('market.watchlist')} count={watchlist.length}>
-        {watchlist.length === 0 ? (
-          <p className="px-3 py-2 text-[12px] leading-relaxed text-muted-foreground">
-            {t('market.emptyWatchlistHint')}
-          </p>
-        ) : (
-          watchlist.map((entry) => (
-            <SidebarRow
-              key={`${entry.assetClass}:${entry.symbol}`}
-              label={<span className="font-mono font-semibold truncate">{entry.symbol}</span>}
-              active={isFocusedDetail(entry.assetClass, entry.symbol)}
-              onClick={() =>
-                openOrFocus({
-                  kind: 'market-detail',
-                  params: { assetClass: entry.assetClass, symbol: entry.symbol },
-                })
-              }
-              trail={
-                <>
-                  <AssetClassChip cls={entry.assetClass} />
-                  <Button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeFromWatchlist(entry.assetClass, entry.symbol)
-                    }}
-                    variant="ghost"
-                    size="icon-sm"
-                    className="text-muted-foreground/70 hover:text-destructive focus-visible:text-destructive"
-                    aria-label={t('market.removeFromWatchlist', { symbol: entry.symbol })}
-                  >
-                    <X className="size-3" aria-hidden />
-                  </Button>
-                </>
-              }
-            />
-          ))
-        )}
         </MarketSection>
       </div>
     </div>

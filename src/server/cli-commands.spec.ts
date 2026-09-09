@@ -1,3 +1,4 @@
+import { createMarketBarsTools } from '../tool/market-bars.js'
 import { describe, it, expect } from 'vitest'
 import { ToolCenter } from '../core/tool-center.js'
 import { WorkspaceToolCenter } from '../core/workspace-tool-center.js'
@@ -48,6 +49,7 @@ describe('CLI_EXPORTS — data export (global tools)', () => {
   tc.register(createVendorTools(any), 'market-vendors')
   tc.register(createEquityTools(any), 'equity')
   tc.register(createNewsArchiveTools(any), 'rss')
+  tc.register(createMarketBarsTools(any), 'market-bars')
   tc.register(createQuantTools(any), 'quant')
   tc.register(createSnapshotTools(any), 'snapshot')
   tc.register(createSimulateTools(any), 'simulate')
@@ -149,16 +151,23 @@ describe('CLI_EXPORTS — structure', () => {
     }
   })
 
-  it('no export maps the same tool from two verbs', () => {
+  it('keeps mapping targets unique except the shipped analysis search-bars alias', () => {
     for (const [key, exp] of Object.entries(CLI_EXPORTS)) {
       const seen = new Set<string>()
       for (const verbs of Object.values(exp.commands)) {
         for (const toolName of Object.values(verbs)) {
-          expect(seen.has(toolName), `${key}: duplicate mapping target: ${toolName}`).toBe(false)
+          if (!(key === 'data' && toolName === 'searchBars')) {
+            expect(seen.has(toolName), `${key}: duplicate mapping target: ${toolName}`).toBe(false)
+          }
           seen.add(toolName)
         }
       }
     }
+  })
+
+  it('keeps the old bar discovery command as an exact alias', () => {
+    expect(CLI_EXPORTS.data.commands.market['search-bars']).toBe('searchBars')
+    expect(CLI_EXPORTS.data.commands.analysis['search-bars']).toBe('searchBars')
   })
 
   it('unions sibling exports without crossing registry scopes', () => {

@@ -50,6 +50,12 @@ bottom sentinel approaches the viewport. Appending keeps the reading position;
 changing a filter resets the batch and scroll position. This is not server
 pagination: the existing query limit and refresh cadence remain unchanged.
 
+Market navigation keeps News first, followed by Markets (market overview and
+an expandable watchlist), Analytics (movers, sector rotation, term structure),
+and Macro boards. Section headings are static; only news categories and the
+watchlist disclose child items. The watchlist uses the shared Collapsible
+primitive and keeps pinned entries intact when closed.
+
 The stable page hierarchy is:
 
 1. global shell and activity rail;

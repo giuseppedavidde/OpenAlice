@@ -102,9 +102,11 @@ export function buildPackagedToolchainSmokePlan(packageResult) {
     env: {
       ELECTRON_RUN_AS_NODE: '1',
       OPENALICE_CLI_BIN: 'traderhub',
+      AQ_WS_ID: '',
+      OPENALICE_PROJECT_ID: '',
     },
     expectStatus: 1,
-    expectStderr: /traderhub: AQ_WS_ID is not set/,
+    expectStderr: /traderhub: No Project context/,
   })
 
   if (packageResult.platform === 'win32') {
@@ -195,9 +197,9 @@ const run = async (args) => {
       label: 'Workspace CLI launcher through managed Git Bash',
       command: bashExe,
       args: ['--noprofile', '--norc', '-c', 'alice --help'],
-      env: winEnv,
+      env: { ...winEnv, AQ_WS_ID: '', OPENALICE_PROJECT_ID: '' },
       expectStatus: 1,
-      expectStderr: /alice: AQ_WS_ID is not set/,
+      expectStderr: /alice: No Project context/,
     })
     commands.push({
       label: 'Workspace CLI transport env through managed Git Bash',
@@ -211,7 +213,7 @@ const run = async (args) => {
         OPENALICE_CLI_DEBUG: '1',
       },
       expectStatus: 1,
-      expectStdout: /"toolUrl":"\/cli"/,
+      expectStderr: /"toolUrl":"\/cli"/,
     })
   }
 

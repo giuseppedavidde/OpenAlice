@@ -168,7 +168,7 @@ describe('MarketSidebar search keyboard controls', () => {
     useWorkspace.getState().openOrFocus({ kind: 'news', params: { category: 'us' } })
     renderSidebar()
     const active = getFocusedTab(useWorkspace.getState())
-    for (const label of ['News', 'Markets', 'Macro', 'Watchlist']) {
+    for (const label of ['News', 'Markets', 'Analytics', 'Macro']) {
       const group = screen.getByRole('group', { name: label })
       expect(within(group).getByRole('heading', { name: label })).toBeTruthy()
     }
@@ -184,6 +184,25 @@ describe('MarketSidebar search keyboard controls', () => {
     await user.keyboard(' ')
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
     expect(within(navigation).getByRole('button', { name: 'US Stocks' }).getAttribute('aria-current')).toBe('page')
+  })
+
+  it('groups the watchlist with markets and keeps analytical boards separate', () => {
+    useWatchlist.setState({ entries: [{ assetClass: 'equity', symbol: 'AAPL', addedAt: 1 }] })
+    renderSidebar()
+    expect(screen.getAllByRole('heading').map(h => h.textContent)).toEqual(['News', 'Markets', 'Analytics', 'Macro'])
+    const markets = screen.getByRole('group', { name: 'Markets' })
+    expect(within(markets).getByRole('button', { name: 'Market overview' })).toBeTruthy()
+    const watchlist = within(markets).getByRole('button', { name: 'Watchlist' })
+    expect(within(markets).getByText('AAPL')).toBeTruthy()
+    fireEvent.click(watchlist)
+    expect(watchlist.getAttribute('aria-expanded')).toBe('false')
+    expect(useWatchlist.getState().entries).toHaveLength(1)
+    fireEvent.click(watchlist)
+    expect(within(markets).getByText('AAPL')).toBeTruthy()
+    const analytics = screen.getByRole('group', { name: 'Analytics' })
+    fireEvent.click(within(analytics).getByRole('button', { name: 'Term Structure' }))
+    expect(getFocusedTab(useWorkspace.getState())?.spec).toEqual({ kind: 'market-board', params: { board: 'term-structure' } })
+    expect(within(analytics).getByRole('button', { name: 'Term Structure' }).getAttribute('aria-current')).toBe('page')
   })
 
   it('places search results before the news directory', () => {

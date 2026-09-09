@@ -1328,3 +1328,29 @@ Verify the real `/api/auth/status` and root page after `up`, prove the Runtime
 survives the starting shell, and prove `down` leaves no Guardian/Alice child.
 When shared Runtime or dependency topology changes, add the matching Electron
 PTY/package smoke even though this CLI does not own Electron.
+
+## Project capability CLI
+
+`openalice exec [--project <key> | --home <path>] <alice|traderhub|alice-uta>
+[command flags]` invokes the running Project's manifest-driven CLI. For example:
+
+```bash
+openalice exec --project research alice market search-bars --query AAPL
+openalice exec --project research alice market bars --symbol AAPL --asset-class equity --count 250 --output bars.json
+```
+
+Selection uses the existing Supervisor Project resolver. An injected Workspace
+inherits its Project and Workspace policy; an explicit Project/home selection
+clears inherited Workspace, run and Session attribution. Project-only calls
+expose globally owned tools, never construct a synthetic Workspace, and cannot
+invoke scoped collaboration tools. UTA continues owning all trading writes.
+
+Alice publishes ephemeral `state/cli-endpoint.json` after startup, including
+Project identity and the actual loopback/socket tool endpoint. Shutdown removes
+only its own descriptor. Missing/stale endpoints fail; the client does not scan
+ports or start a Runtime. The gateway checks the selected Project identity on
+every Project request. This is local routing consistency, not authentication.
+
+The native executable dispatches the same bundled Workspace CLI payload;
+source mode loads the running Project's payload. `--output` saves successful
+responses to a new file, preserving existing files; diagnostics stay on stderr.

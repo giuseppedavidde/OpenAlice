@@ -47,9 +47,9 @@ files, Issues, Inbox reports, tracked entities, and attributable Sessions.
 
 ## Choose the right surface
 
-OpenAlice places four boundary-specific CLIs on PATH. Their live top-level help
-explains each group; their skills own procedures and exact examples. Read the
-relevant skill before the first domain command and never guess flags.
+OpenAlice provides the CLIs below. Use their help for current parameters and
+the relevant skills for domain-specific guidance. Choose sources and tools to
+fit the task.
 
 | Need | Surface | Skill |
 |---|---|---|
@@ -58,7 +58,7 @@ relevant skill before the first domain command and never guess flags.
 | Peer addressing, Agent conversation, Inbox, Issues and provenance | `alice` | `alice` |
 | Issue files, schedules, headless delivery contracts | `.alice/issues/` + `alice issue` | `self-scheduling` |
 | Accounts, positions, orders, trading-as-git | `alice-uta` | `alice-uta` |
-| Optional sources Alice does not ship | `opencli` | `opencli-reader` |
+| Optional website adapters, if installed separately | `opencli` | `opencli-reader` |
 
 Use the bundled research skills (`build-thesis`, `sector-rotation`,
 `scan-value-chain`, `retrospective`) when their workflow matches the request.

@@ -270,6 +270,13 @@ which would remove Electron's own application metadata. Packaging commands run
 through `pnpm -F @traderalice/desktop` (the configured hook is relative to that
 working directory).
 
+Windows installed-version polling reads the authoritative `app.asar/package.json`
+when an archive exists, and the loose `app/package.json` for older releases.
+Clear the ASAR header cache between polls because NSIS replaces the archive in
+place. A partial archive must remain retryable rather than falling back to a
+stale loose manifest. Final installer completion and version detection remain
+separate checks before the upgrade journey launches the candidate.
+
 `asarUnpack` explicitly retains node-pty and dugite's embedded Git under
 `app.asar.unpacked`, with other native dependencies handled by builder's
 native-module detection. The package assertion verifies archive contents,
