@@ -35,8 +35,11 @@ describe('Inbox Connector bridge', () => {
       warn,
     })
 
-    const entry = await store.append({ workspaceId: 'ws-1', comments: 'done' })
-    expect(entry.comments).toBe('done')
+    const entry = await store.append({
+      workspaceId: 'ws-1',
+      body: 'done'
+    })
+    expect(entry.body).toBe('done')
     await vi.waitFor(() => expect(push).toHaveBeenCalledOnce())
 
     rejectDelivery(new Error('external IM offline'))
@@ -49,13 +52,12 @@ describe('Inbox Connector bridge', () => {
       ts: 1_700_000_000_000,
       workspaceId: 'ws-1',
       workspaceLabel: 'Research',
-      comments: 'Read the report.',
-      docs: [{ path: 'research/close.md' }],
       origin: { kind: 'headless', resumeId: 'resume-calm-river-12ab', agent: 'pi' },
+      body: "Read the report.\n\n[[research/close.md]]"
     })
     expect(notification).toMatchObject({
       title: 'Inbox update from Research',
-      body: 'Read the report.\n\nReports:\n- research/close.md',
+      body: 'Read the report.\n\n[[research/close.md]]',
       provenance: { resumeId: 'resume-calm-river-12ab', actorLabel: 'pi' },
     })
   })
@@ -76,8 +78,7 @@ describe('Inbox Connector bridge', () => {
 
     await store.append({
       workspaceId: 'ws-1',
-      docs: [{ path: 'research/close.md' }],
-      comments: 'Attached without flattening the report.',
+      body: "Attached without flattening the report.\n\n[[research/close.md]]"
     })
 
     await vi.waitFor(() => expect(push).toHaveBeenCalledOnce())
@@ -115,13 +116,12 @@ describe('Inbox Connector bridge', () => {
 
     await store.append({
       workspaceId: 'ws-1',
-      docs: [{ path: 'research/close.html' }],
-      comments: 'Dashboard attached.',
+      body: "Dashboard attached.\n\n[[research/close.html]]"
     })
 
     await vi.waitFor(() => expect(push).toHaveBeenCalledOnce())
     const notification = push.mock.calls[0]?.[0]
-    expect(notification?.body).toBe('Dashboard attached.\n\nReports:\n- research/close.html')
+    expect(notification?.body).toBe('Dashboard attached.\n\n[[research/close.html]]')
     expect(notification?.body).not.toContain('Close dashboard')
     expect(notification?.attachments?.[0]).toMatchObject({
       filename: 'close.html',
@@ -145,7 +145,7 @@ describe('Inbox Connector bridge', () => {
       id: 'entry-legacy-htm',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'legacy.htm' }],
+      body: "[[legacy.htm]]"
     }, () => ({ dir: root }))
 
     expect(attachments).toEqual([])
@@ -162,7 +162,7 @@ describe('Inbox Connector bridge', () => {
       id: 'entry-ambiguous',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'ambiguous.md' }],
+      body: "[[ambiguous.md]]"
     }, () => ({ dir: root }), warn)
 
     expect(attachments).toHaveLength(1)
@@ -188,7 +188,7 @@ describe('Inbox Connector bridge', () => {
       id: 'entry-escape',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'leak.md' }],
+      body: "[[leak.md]]"
     }, () => ({ dir: root }), warn)
 
     expect(attachments).toEqual([])
@@ -201,7 +201,7 @@ describe('projectInboxDoc', () => {
     id: 'entry-one',
     ts: Date.now(),
     workspaceId: 'ws-1',
-    comments: 'See the report.',
+    body: 'See the report.'
   }
 
   it('materializes one selected Markdown file through the shared Workspace checks', async () => {
@@ -212,7 +212,7 @@ describe('projectInboxDoc', () => {
 
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: 'research/close.md' }, { path: 'research/other.md' }],
+      body: "[[research/close.md]]\n\n[[research/other.md]]"
     }, 0, () => ({ dir: root }))
 
     expect(result.ok).toBe(true)
@@ -227,9 +227,9 @@ describe('projectInboxDoc', () => {
     tempDirs.push(root)
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: '../secret.md' }],
+      body: "[[../secret.md]]"
     }, 0, () => ({ dir: root }))
-    expect(result).toMatchObject({ ok: false, reason: 'path_escape' })
+    expect(result).toMatchObject({ ok: false, reason: 'doc_not_found' })
   })
 
   it('refuses a symlink that escapes the Workspace', async ({ skip }) => {
@@ -245,7 +245,7 @@ describe('projectInboxDoc', () => {
     }
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: 'leak.md' }],
+      body: "[[leak.md]]"
     }, 0, () => ({ dir: root }))
     expect(result).toMatchObject({ ok: false, reason: 'path_escape' })
   })
@@ -256,7 +256,7 @@ describe('projectInboxDoc', () => {
     await writeFile(join(root, 'huge.md'), Buffer.alloc(MAX_CONNECTOR_ATTACHMENT_BYTES + 1, 0x61))
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: 'huge.md' }],
+      body: "[[huge.md]]"
     }, 0, () => ({ dir: root }))
     expect(result).toMatchObject({ ok: false, reason: 'file_too_large' })
   })
@@ -264,7 +264,7 @@ describe('projectInboxDoc', () => {
   it('fails clearly when the selected index is gone', async () => {
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: 'research/close.md' }],
+      body: "[[research/close.md]]"
     }, 4, () => ({ dir: '/tmp' }))
     expect(result).toMatchObject({ ok: false, reason: 'doc_not_found' })
   })
@@ -274,7 +274,7 @@ describe('projectInboxDoc', () => {
     tempDirs.push(root)
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: 'research/missing.md' }],
+      body: "[[research/missing.md]]"
     }, 0, () => ({ dir: root }))
     expect(result).toMatchObject({ ok: false, reason: 'file_missing' })
   })
@@ -287,7 +287,7 @@ describe('projectInboxDoc', () => {
     const warn = vi.fn()
     const result = await projectInboxDoc({
       ...baseEntry,
-      docs: [{ path: 'ambiguous.md' }],
+      body: "[[ambiguous.md]]"
     }, 0, () => ({ dir: root }), warn)
     expect(result.ok).toBe(true)
     if (!result.ok) return
@@ -311,7 +311,7 @@ describe('binary attachment projection', () => {
       id: 'entry-binary',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'chart.png' }, { path: 'scan.pdf' }, { path: 'photo.jpg' }],
+      body: '[[chart.png]]\n\n[[scan.pdf]]\n\n[[photo.jpg]]',
     }, () => ({ dir: root }))
 
     expect(attachments.map((projection) => [projection.sourcePath, projection.attachment.mediaType]))
@@ -334,7 +334,7 @@ describe('binary attachment projection', () => {
       id: 'entry-txt',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'notes.txt' }],
+      body: '[[notes.txt]]',
     }, () => ({ dir: root }))
 
     expect(attachments).toHaveLength(1)
@@ -352,7 +352,7 @@ describe('binary attachment projection', () => {
       id: 'entry-unsupported',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'archive.zip' }],
+      body: '[[archive.zip]]',
     }, () => ({ dir: root }))
 
     expect(attachments).toEqual([])
@@ -371,7 +371,7 @@ describe('binary attachment projection', () => {
       id: 'entry-cap',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs,
+      body: docs.map((doc) => `[[${doc.path}]]`).join('\n\n'),
     }, () => ({ dir: root }), warn)
 
     expect(attachments).toHaveLength(MAX_CONNECTOR_ATTACHMENTS)
@@ -388,7 +388,7 @@ describe('binary attachment projection', () => {
       id: 'entry-binary-large',
       ts: Date.now(),
       workspaceId: 'ws-1',
-      docs: [{ path: 'huge.png' }],
+      body: '[[huge.png]]',
     }, () => ({ dir: root }), warn)
 
     expect(attachments).toEqual([])

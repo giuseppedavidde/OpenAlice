@@ -1425,6 +1425,7 @@ export const ja: Resources = {
     resumeError: 'この管理者会話を再開できませんでした。',
   },
   chatLanding: {
+    uiMode: 'UI モード',
     heading: 'Alice に何を任せますか？',
     subheading: '選択した Workspace で調査、分析、取引を進めます。',
     targetHeading: 'このワークスペースで新規セッション',
@@ -3133,6 +3134,9 @@ export const ja: Resources = {
     notFoundBody: '{{name}} という名前のテンプレートはありません。',
   },
   workspace: {
+    sessionNotFound: 'このセッションは存在しません。',
+    sessionOpening: 'セッションを開いています…',
+    sessionDisconnected: '対話接続が切断されました。',
     interactiveOwnership: {
       background: 'このセッションはバックグラウンドで実行中です。対話接続は切断されました。',
       title: '対話接続を開きますか？',
@@ -3306,7 +3310,10 @@ export const ja: Resources = {
     upgradePreservedTitle: 'カスタマイズを保持',
     upgradePreservedDescription: 'このワークスペースだけが変更したファイルです。OpenAlice は変更しません。',
     upgradeConflictTitle: '選択が必要',
-    upgradeConflictDescription: 'テンプレートとワークスペースの両方が変更しました。各ファイルで保持する側を選択してください。',
+    upgradeMerged: 'マージ済み',
+    upgradeBaseCopy: '以前のソース',
+    upgradeResolveInChat: 'チャットで解決',
+    upgradeConflictDescription: 'Git で自動マージできませんでした。ワークスペースの AI に解決を依頼するか、下で保持する版を選んでください。',
     upgradeCompleteTitle: 'テンプレート更新が完了しました',
     upgradeCompleteDescription: 'Git コミット {{commit}} で管理ファイル {{count}} 件を更新しました。ワークスペース固有の変更は保持されています。',
     upgradeUnresolved: 'あと {{count}} ファイルの選択が必要です',

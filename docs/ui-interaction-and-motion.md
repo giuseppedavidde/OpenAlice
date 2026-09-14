@@ -63,6 +63,27 @@ The stable page hierarchy is:
 3. one focused working view;
 4. dialogs, drawers, and popovers for temporary decisions.
 
+On macOS Electron, native traffic lights share a 44px row with the primary
+navigation and page title. The desktop rail header replaces the wordmark with
+native-control space; its compact width is 88px. Below 768px the mobile context
+bar reserves that same left inset, and the navigation drawer reserves 44px at
+the top. Header whitespace is draggable; controls remain interactive. The
+preload's read-only `windowChrome.platform` selects this shell treatment.
+Windows Electron uses native Window Controls Overlay in the same 44px header
+band. `useWindowsChrome` measures the shared page, navigation, work-panel and
+banner rows against the overlay's reported CSS-pixel rectangle; only rows
+intersecting native controls reserve horizontal space. Geometry changes cover
+resize, display scaling, maximization and fullscreen, without imitating native
+caption buttons or Snap Layouts. Very narrow split toolbars move below the
+caption band instead of overflowing into its controls. Loading and disconnected
+screens retain a draggable caption region without mounting the authenticated
+App. App palette/surface colors update the native
+overlay through a validated color-only preload bridge. Edge drawers reserve
+the caption band's height, and header controls remain non-draggable.
+Browser and Linux retain their existing window chrome. Windows native visual
+and Snap/high-DPI acceptance requires a Windows runtime; Mac geometry tests
+and browser layout checks do not replace that gate.
+
 The activity rail's utility items, groups, and visibility are user-arranged from
 Settings → Activity bar and stored in `data/ui-layout.json`. The three Harnesses
 are a fixed work section below those utilities; their visibility follows the
@@ -93,7 +114,14 @@ paused resumable Sessions restore through the existing runtime action. A pending
 restore shows a spinner and rejects repeated clicks; failures stay on the row
 and allow retry. Headless occupancy still opens the single-writer explanation.
 The primary row has no separate play/stop target; settings, stop and archive live
-in its options menu. Direct links and history browsers retain view-only opening.
+in its options menu. Direct links and history browsers use the same activation contract: an idle
+Session opens its saved TUI/Web surface without a paused-session interstitial.
+Activation checks the Session Directory for background occupancy before
+requesting a runtime; the server remains the final concurrency authority.
+Failures show the concrete cause and an explicit retry. Hidden Workspace tabs
+do not auto-start, and losing/disconnecting an already-open interactive surface
+does not automatically reclaim it. The former decorative terminal backdrop and
+Resume CTA are removed.
 In expanded navigation, a selected Session or Studio does not also select its
 Harness header. The compact rail retains the Harness selection because Session rows
 are hidden there; returning to the Harness landing selects its header.

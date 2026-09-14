@@ -1,3 +1,5 @@
+import { registerConnectorModelRoutes } from './connector-model.js'
+import { registerMarketReferenceRoute } from './market-reference.js'
 import { registerWorkspaceFileRoutes } from './workspace-files.js'
 import { registerProjectCliRoutes } from './project-cli.js'
 /**
@@ -67,7 +69,9 @@ type WsMeta = { id: string; tag: string; dir?: string }
 export function registerCliRoutes(app: Hono, deps: CliGatewayDeps, manifestOnly = false): void {
   const { toolCenter, workspaceToolCenter, inboxStore, entityStore, getWorkspaceService } = deps
   if (!manifestOnly) {
+    registerConnectorModelRoutes(app, getWorkspaceService)
     registerProjectCliRoutes(app, toolCenter)
+    registerMarketReferenceRoute(app, toolCenter)
     registerWorkspaceFileRoutes(app, id => getWorkspaceService()?.registry.get(id))
   }
 
@@ -265,7 +269,12 @@ export function registerCliRoutes(app: Hono, deps: CliGatewayDeps, manifestOnly 
     const mapped = mappedToolNamesForScope(r.exp.scope)
     const unmapped = cat.inventoryNames().filter((n) => !mapped.has(n))
 
+    // Discovery must remain usable even if the optional upgrade receipt is unreadable.
+    const upgradeWarning = !manifestOnly && r.ws.dir
+      ? await getWorkspaceService()?.aliceHarnessUpgrades?.upgradeNotice(r.ws.id).catch(() => undefined)
+      : undefined
     return c.json({
+      ...(upgradeWarning ? { warnings: [upgradeWarning] } : {}),
       export: c.req.param('export'),
       description: r.exp.description,
       groupDescriptions: r.exp.groupDescriptions,
