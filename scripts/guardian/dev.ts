@@ -69,6 +69,28 @@ async function releaseGuardianRuntimeLock(): Promise<void> {
   }
 }
 
+let guardianCascade: (() => void) | null = null
+
+/** Last-resort cleanup for async crashes that would otherwise bypass every
+ *  shutdown path: kill tracked children (via cascade when armed) and release
+ *  the runtime lock so a successor is not blocked by a stale owner. */
+function requestGuardianShutdown(): void {
+  if (guardianCascade) {
+    guardianCascade()
+    return
+  }
+  void releaseGuardianRuntimeLock().finally(() => process.exit(1))
+}
+
+process.on('unhandledRejection', (reason) => {
+  console.error('[guardian] unhandled rejection:', reason)
+  requestGuardianShutdown()
+})
+process.on('uncaughtException', (err) => {
+  console.error('[guardian] uncaught exception:', err)
+  requestGuardianShutdown()
+})
+
 async function main(): Promise<void> {
   const options = parseDevGuardianOptions(process.argv.slice(2))
   // One global store by default (~/.openalice) — shared with the packaged
@@ -336,6 +358,35 @@ async function main(): Promise<void> {
     prefixLogs: true,
   })
 
+  // Arm the cascade before waiting for Alice: a signal or crash during the
+  // startup window must still kill tracked children and release the runtime
+  // lock. Otherwise the early signal handler only sets a flag, a concurrent
+  // --takeover escalates to SIGKILL, and the lock is left stale with orphaned
+  // children.
+  const cascade = installCascadeShutdown({
+    children: [...(uta ? [uta.process] : []), ...(connector ? [connector.process] : []), alice],
+    ...((uta || connector) ? {
+      nonCriticalChildren: new Set([
+        ...(uta ? [uta.process] : []),
+        ...(connector ? [connector.process] : []),
+      ]),
+    } : {}),
+    onShutdown: releaseGuardianRuntimeLock,
+  })
+  guardianCascade = cascade.shutdown
+
+  // UTA restart cooperates with cascade — old SIGTERM is "expected", new
+  // child is tracked for unexpected exit + signal forwarding.
+  const attachServiceCascade = (controller: OptionalServiceController) => {
+    controller.cascade = {
+      expectExit: cascade.expectExit,
+      trackReplacement: cascade.trackReplacement,
+    }
+  }
+  if (uta) attachServiceCascade(uta)
+  if (connector) attachServiceCascade(connector)
+  connectorRecoveryReady = true
+
   const aliceReady = await waitForHttp(`http://127.0.0.1:${ports.webPort}/api/version`, { timeoutMs: 20_000 })
   if (!aliceReady) {
     aliceStatus = 'offline'
@@ -364,28 +415,7 @@ async function main(): Promise<void> {
     prefixLogs: true,
   })
 
-  const cascade = installCascadeShutdown({
-    children: [...(uta ? [uta.process] : []), ...(connector ? [connector.process] : []), alice, vite],
-    ...((uta || connector) ? {
-      nonCriticalChildren: new Set([
-        ...(uta ? [uta.process] : []),
-        ...(connector ? [connector.process] : []),
-      ]),
-    } : {}),
-    onShutdown: releaseGuardianRuntimeLock,
-  })
-
-  // UTA restart cooperates with cascade — old SIGTERM is "expected", new
-  // child is tracked for unexpected exit + signal forwarding.
-  const attachServiceCascade = (controller: OptionalServiceController) => {
-    controller.cascade = {
-      expectExit: cascade.expectExit,
-      trackReplacement: cascade.trackReplacement,
-    }
-  }
-  if (uta) attachServiceCascade(uta)
-  if (connector) attachServiceCascade(connector)
-  connectorRecoveryReady = true
+  cascade.trackChild(vite)
 
   function armConnectorRecovery(controller: OptionalServiceController) {
     const watched = controller.process
