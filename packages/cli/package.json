@@ -1,6 +1,6 @@
 {
   "name": "@traderalice/openalice-cli",
-  "version": "0.93.1",
+  "version": "0.94.0-beta",
   "description": "OpenAlice local runtime and remote connection CLI",
   "type": "module",
   "bin": {
@@ -21,6 +21,7 @@
     "src/project-transfer-ssh.ts",
     "src/project-transfer-stream.ts",
     "src/machine-command.ts",
+    "src/machine-target-command.mjs",
     "src/machine-inventory.ts",
     "src/machine-registry.ts",
     "src/launch-context.ts",
