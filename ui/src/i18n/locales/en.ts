@@ -13,6 +13,17 @@
  */
 
 export const en = {
+  modelCatalog: {
+    bundled: "Using built-in model suggestions.",
+    missing: "{{model}} is not in the latest model list. Your selection is kept; availability may have changed.",
+    loading: "Loading models from this AI access…",
+    failed: "Could not load models. Retry, or enter an ID manually if this provider has no model list API.",
+    empty: "No models found. Configure a provider in this account, then refresh.",
+    loaded: "{{count}} models available",
+    refresh: "Refresh",
+    selectHelp: "Choose a model available through this AI access.",
+    selectPlaceholder: "Choose a model",
+  },
   stickers: {
     "meaning": "Meaning (optional)",
     "title": "Stickers",
@@ -1423,7 +1434,7 @@ export const en = {
     harnessVersion: 'Pinned Harness version',
     initializeAction: 'Initialize AutoQuant',
     initializing: 'Initializing AutoQuant…',
-    initializingBody: 'Preparing the pinned Harness and local Git workspace. This may take a moment.',
+    initializingBody: 'Preparing the pinned Harness and local Git workspace. You can switch pages; initialization will continue.',
   },
   autoPrediction: {
     newResearch: 'New prediction research',
@@ -1459,7 +1470,7 @@ export const en = {
     persistentBody: 'Evidence, campaigns, SQLite state, files, and Git history remain owned by Auto Prediction inside this Workspace.',
     initializeAction: 'Initialize Auto Prediction',
     initializing: 'Initializing Auto Prediction…',
-    initializingBody: 'Cloning and verifying the approved source snapshot. This may take a moment.',
+    initializingBody: 'Cloning and verifying the approved source snapshot. You can switch pages; initialization will continue.',
   },
   chatSetup: {
     loading: 'Loading Ask Alice',
@@ -1476,7 +1487,7 @@ export const en = {
     persistentBody: 'Files, Sessions, and history stay in this Workspace.',
     initializeAction: 'Initialize Ask Alice',
     initializing: 'Initializing Ask Alice…',
-    initializingBody: 'Preparing the Chat workspace. This may take a moment.',
+    initializingBody: 'Preparing the Chat workspace. You can switch pages; initialization will continue.',
   },
   workspaceManager: {
     title: 'Workspace Manager',
@@ -1505,6 +1516,7 @@ export const en = {
     resumeError: 'Could not resume this manager conversation.',
   },
   chatLanding: {
+    startingSession: 'Starting session…',
     uiMode: 'UI mode',
     heading: 'What should Alice work on?',
     subheading: 'Research, analysis, and trading workflows in the selected Workspace.',
@@ -1542,14 +1554,16 @@ export const en = {
     openInstallDocs: 'Open {{name}} setup docs',
     noAgentsTitle: 'Managed runtime not detected',
     noAgentsBody: 'OpenAlice normally includes Pi for workspace chat. If this appears in a packaged build, the runtime bundle needs attention; you can continue in Lite while setup is checked.',
-    selectCredential: 'AI access',
-    aiAccess: 'AI access',
-    credentialMenuTitle: 'Who should manage AI access for {{runtime}}?',
+    selectCredential: 'AI Provider',
+    aiAccess: 'AI Provider',
+    credentialMenuTitle: 'Select an AI account for {{runtime}}',
+    addApiAccount: 'Add API account…',
+    addApiAccountDetail: 'Configure a Coding Plan or custom API in Settings',
     modelField: 'Model',
     effortField: 'Effort',
     runtimeFallback: 'Runtime',
     runtimeAccount: '{{runtime}} account',
-    runtimeAccountDetail: 'Uses the account signed in to {{runtime}}',
+    runtimeAccountDetail: 'Uses {{runtime}}’s own login or API configuration',
     workspaceAiAccess: 'Workspace AI setup',
     workspaceAccessDetail: '{{credential}} from this Workspace',
     savedAccessDetail: 'Saved {{credential}}',
@@ -2116,6 +2130,7 @@ export const en = {
     apiDescription: 'Trigger workspace automation from outside, and review the schedule-file format.',
   },
   activityToast: {
+    session: 'A session',
     agent: 'Agent',
     conversationRunning: '{{agent}} is handling another Agent request',
     conversationFailed: '{{agent}} could not complete an Agent request',

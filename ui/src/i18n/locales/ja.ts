@@ -2,6 +2,17 @@ import type { Resources } from './en'
 
 /** 日本語. Typed as `Resources` → must match en's key structure exactly. */
 export const ja: Resources = {
+  modelCatalog: {
+    bundled: "組み込みのモデル候補を表示しています。",
+    missing: "最新のモデル一覧に {{model}} がありません。選択は保持されていますが、利用可否が変わった可能性があります。",
+    loading: "この AI アクセスのモデルを読み込み中…",
+    failed: "モデルを取得できませんでした。再試行するか、一覧 API がない場合は ID を入力してください。",
+    empty: "モデルがありません。このアカウントのプロバイダーを設定して更新してください。",
+    loaded: "{{count}} 個のモデルを利用可能",
+    refresh: "更新",
+    selectHelp: "この AI アクセスで利用できるモデルを選択してください。",
+    selectPlaceholder: "モデルを選択",
+  },
   stickers: {
     "meaning": "Meaning (optional)",
     "title": "Stickers",
@@ -1413,7 +1424,7 @@ export const ja: Resources = {
     harnessVersion: '固定 Harness バージョン',
     initializeAction: 'AutoQuant を初期化',
     initializing: 'AutoQuant を初期化中…',
-    initializingBody: '固定 Harness とローカル Git Workspace を準備しています。しばらくお待ちください。',
+    initializingBody: '固定 Harness とローカル Git Workspace を準備しています。別のページに移動しても初期化は続行されます。',
   },
   autoPrediction: {
     newResearch: '予測リサーチを開始', newWorkspace: 'Auto Prediction ワークスペースを作成',
@@ -1434,7 +1445,7 @@ export const ja: Resources = {
     workspaceMeta: '{{count}} セッション · スナップショット {{version}}', manageWorkspaces: 'ワークスペースを管理',
     persistentTitle: '永続的な予測研究デスク', persistentBody: '証拠、Campaign、SQLite 状態、ファイル、Git 履歴はこのワークスペース内の Auto Prediction が所有します。',
     initializeAction: 'Auto Prediction を初期化', initializing: 'Auto Prediction を初期化中…',
-    initializingBody: '承認済みソーススナップショットを複製して検証しています。',
+    initializingBody: '承認済みソーススナップショットを複製して検証しています。別のページに移動しても初期化は続行されます。',
   },
   chatSetup: {
     loading: 'Ask Alice を読み込み中',
@@ -1451,7 +1462,7 @@ export const ja: Resources = {
     persistentBody: 'ファイル、Session、履歴はこの Workspace に残ります。',
     initializeAction: 'Ask Alice を初期化',
     initializing: 'Ask Alice を初期化中…',
-    initializingBody: 'Chat ワークスペースを準備しています。しばらくお待ちください。',
+    initializingBody: 'Chat ワークスペースを準備しています。別のページに移動しても初期化は続行されます。',
   },
   workspaceManager: {
     title: 'ワークスペース管理者',
@@ -1480,6 +1491,7 @@ export const ja: Resources = {
     resumeError: 'この管理者会話を再開できませんでした。',
   },
   chatLanding: {
+    startingSession: 'セッションを起動中…',
     uiMode: 'UI モード',
     heading: 'Alice に何を任せますか？',
     subheading: '選択した Workspace で調査、分析、取引を進めます。',
@@ -1517,14 +1529,16 @@ export const ja: Resources = {
     openInstallDocs: '{{name}} のセットアップ手順を開く',
     noAgentsTitle: '管理ランタイムが見つかりません',
     noAgentsBody: 'OpenAlice には通常、ワークスペースチャット用の Pi が同梱されます。パッケージ版でこの表示が出る場合は、ランタイム同梱を確認してください。確認中も Lite モードで続行できます。',
-    selectCredential: 'AI アクセス',
-    aiAccess: 'AI アクセス',
-    credentialMenuTitle: '{{runtime}} はどの方法で AI にアクセスしますか？',
+    selectCredential: 'AI Provider',
+    aiAccess: 'AI Provider',
+    credentialMenuTitle: '{{runtime}} で使う AI アカウントを選択',
+    addApiAccount: 'API アカウントを追加…',
+    addApiAccountDetail: '設定で Coding Plan またはカスタム API を追加',
     modelField: 'モデル',
     effortField: '推論強度',
     runtimeFallback: 'ランタイム',
     runtimeAccount: '{{runtime}} アカウント',
-    runtimeAccountDetail: '{{runtime}} でサインイン中のアカウントを使用',
+    runtimeAccountDetail: '{{runtime}} 自身のログインまたは API 設定を使用',
     workspaceAiAccess: 'Workspace AI 設定',
     workspaceAccessDetail: 'この Workspace の {{credential}}',
     savedAccessDetail: '保存済みの {{credential}}',
@@ -2085,6 +2099,7 @@ export const ja: Resources = {
     apiDescription: '外部からワークスペース自動化を起動し、スケジュールファイル形式を確認します。',
   },
   activityToast: {
+    session: 'セッション',
     agent: 'Agent',
     conversationRunning: '{{agent}} が別の Agent からの依頼を処理中です',
     conversationFailed: '{{agent}} が Agent からの依頼を完了できませんでした',

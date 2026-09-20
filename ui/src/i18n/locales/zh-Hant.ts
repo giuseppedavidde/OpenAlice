@@ -10,6 +10,17 @@ import type { Resources } from './en'
  * Content is UI chrome only — no geographic or other non-technical terms.
  */
 export const zhHant: Resources = {
+  modelCatalog: {
+    bundled: "正在使用內建模型建議。",
+    missing: "最新模型列表中沒有 {{model}}。已保留你的選擇，該模型的可用性可能已變更。",
+    loading: "正在讀取此 AI 存取的模型清單…",
+    failed: "讀取模型失敗，請重試；若服務商未提供模型清單 API，可手動輸入 ID。",
+    empty: "未發現模型。請先為此帳戶設定模型提供商，再重新整理。",
+    loaded: "可選 {{count}} 個模型",
+    refresh: "重新整理",
+    selectHelp: "選擇此 AI 存取提供的模型。",
+    selectPlaceholder: "選擇模型",
+  },
   stickers: {
     "meaning": "含义（可选）",
     "title": "表情包",
@@ -1420,7 +1431,7 @@ export const zhHant: Resources = {
     harnessVersion: '鎖定的 Harness 版本',
     initializeAction: '初始化 AutoQuant',
     initializing: '正在初始化 AutoQuant…',
-    initializingBody: '正在準備鎖定版本的 Harness 與本機 Git 工作區，可能需要一些時間。',
+    initializingBody: '正在準備鎖定版本的 Harness 與本機 Git 工作區。可以切換頁面，初始化會繼續進行。',
   },
   autoPrediction: {
     newResearch: '新增預測研究', newWorkspace: '新增 Auto Prediction 工作區',
@@ -1441,7 +1452,7 @@ export const zhHant: Resources = {
     workspaceMeta: '{{count}} 個工作階段 · 快照 {{version}}', manageWorkspaces: '前往工作區管理',
     persistentTitle: '一個持久的預測研究工作區', persistentBody: '證據、Campaign、SQLite 狀態、檔案和 Git 歷史由此工作區內的 Auto Prediction 持有。',
     initializeAction: '初始化 Auto Prediction', initializing: '正在初始化 Auto Prediction…',
-    initializingBody: '正在複製並驗證核准的原始碼快照，請稍候。',
+    initializingBody: '正在複製並驗證核准的原始碼快照。可以切換頁面，初始化會繼續進行。',
   },
   chatSetup: {
     loading: '正在載入 Ask Alice',
@@ -1458,7 +1469,7 @@ export const zhHant: Resources = {
     persistentBody: '檔案、Session 與歷史都會留在此 Workspace。',
     initializeAction: '初始化 Ask Alice',
     initializing: '正在初始化 Ask Alice…',
-    initializingBody: '正在準備 Chat 工作區，可能需要一些時間。',
+    initializingBody: '正在準備 Chat 工作區。可以切換頁面，初始化會繼續進行。',
   },
   workspaceManager: {
     title: '工作臺主管',
@@ -1487,6 +1498,7 @@ export const zhHant: Resources = {
     resumeError: '無法恢復這段主管對話。',
   },
   chatLanding: {
+    startingSession: '正在啟動工作階段…',
     uiMode: 'UI 模式',
     heading: '先讓 Alice 處理什麼？',
     subheading: '在選定的 Workspace 中進行研究、分析與交易工作。',
@@ -1524,14 +1536,16 @@ export const zhHant: Resources = {
     openInstallDocs: '開啟 {{name}} 安裝文件',
     noAgentsTitle: '未偵測到託管執行環境',
     noAgentsBody: 'OpenAlice 通常會自帶 Pi 用於工作區對話。如果打包版出現這個提示，表示執行環境包需要檢查；你仍然可以先以 Lite 模式繼續使用。',
-    selectCredential: 'AI 存取',
-    aiAccess: 'AI 存取',
-    credentialMenuTitle: '{{runtime}} 要如何存取 AI？',
+    selectCredential: 'AI Provider',
+    aiAccess: 'AI Provider',
+    credentialMenuTitle: '選擇 {{runtime}} 使用的 AI 帳戶',
+    addApiAccount: '新增 API 帳戶…',
+    addApiAccountDetail: '在設定中新增 Coding Plan 或自訂 API',
     modelField: '模型',
     effortField: '推理強度',
     runtimeFallback: '執行環境',
     runtimeAccount: '{{runtime}} 帳戶',
-    runtimeAccountDetail: '使用 {{runtime}} 目前登入的帳戶',
+    runtimeAccountDetail: '使用 {{runtime}} 自己的登入或 API 設定',
     workspaceAiAccess: 'Workspace AI 設定',
     workspaceAccessDetail: '此 Workspace 的 {{credential}}',
     savedAccessDetail: '已儲存的 {{credential}}',
@@ -2092,6 +2106,7 @@ export const zhHant: Resources = {
     apiDescription: '從外部觸發工作區自動化，並查看排程檔案格式。',
   },
   activityToast: {
+    session: '一個對話',
     agent: 'Agent',
     conversationRunning: '{{agent}} 正在處理另一個 Agent 的請求',
     conversationFailed: '{{agent}} 未能完成 Agent 請求',

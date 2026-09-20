@@ -2,6 +2,7 @@ import stickerWave from '../fixtures/sticker-wave.json'
 import { demoChatWorkflowReply, demoChatWorkflowTitle } from '../fixtures/chat-workflows'
 import { stickerHandlers } from './stickers'
 import { http, HttpResponse } from 'msw'
+import { demoCredentialPresets } from './configKeys'
 import type { AliceHarnessConfig } from '../../hooks/useAliceHarness'
 import {
   DEMO_AUTO_QUANT_WORKSPACE_ID,
@@ -41,7 +42,7 @@ import type {
 const demoSessionPresence = new Map<string, 'active' | 'archived' | 'deleted'>()
 
 
-const demoManagerSession = {
+let demoManagerSession: SessionRecord & { pid: number; startedAt: number } = {
   id: 'demo-manager-session',
   resumeId: 'demo-resume-manager',
   wsId: 'workspace-manager',
@@ -451,6 +452,10 @@ const demoHarnessConfigs = new Map<string, AliceHarnessConfig>()
 const demoHarnessCommands = { alice: ['rss', 'market', 'analysis', 'peer', 'inbox', 'issue', 'harness'], traderhub: ['equity', 'economy'], 'alice-uta': ['account', 'order'] }
 
 export const workspacesHandlers = [
+  http.all('/api/workspaces/agents/:agent/models', ({ params }) => HttpResponse.json({
+    models: demoCredentialPresets[params.agent === 'claude' ? 0 : 1]!.models!.map((model) => ({ ...model, id: ['omp', 'pi', 'opencode'].includes(String(params.agent)) ? `openai/${model.id}` : model.id })),
+    discoverySupported: true, source: 'snapshot', fetchedAt: Date.now(), refreshing: false, error: null,
+  })),
   ...stickerHandlers,
   http.get('/api/workspaces/auto-quant/default-workspace', () => {
     const workspace = demoAutoQuantDefaultWorkspaceId
@@ -1520,10 +1525,18 @@ export const workspacesHandlers = [
   http.get('/api/workspaces/:id/sessions/:sid/diagnostics', () =>
     HttpResponse.json({ status: 'demo' }),
   ),
-  http.post('/api/workspaces/:id/sessions/:sid/web/open', ({ params }) => {
+  http.post('/api/workspaces/:id/sessions/:sid/web/open', async ({ params, request }) => {
     const wsId = String(params.id)
     const sessionId = String(params.sid)
+    const update = await request.json().catch(() => null) as PausedSessionRuntimeUpdate | null
+    const runtime = update ? {
+      credentialSource: update.credentialSource,
+      ...(update.credentialSlug ? { credentialSlug: update.credentialSlug } : {}),
+      ...(update.model ? { model: update.model } : {}),
+      ...(update.reasoningEffort ? { reasoningEffort: update.reasoningEffort } : {}),
+    } : undefined
     if (wsId === demoManagerSession.wsId && sessionId === demoManagerSession.id) {
+      if (runtime) demoManagerSession = { ...demoManagerSession, runtime }
       return HttpResponse.json({ snapshot: demoManagerSnapshot() })
     }
     const record = demoWorkspaces
@@ -1534,6 +1547,12 @@ export const workspacesHandlers = [
         error: 'unsupported_surface',
         message: `${record.agent} has no Web conversation surface; open it in the terminal instead`,
       }, { status: 409 })
+    }
+    if (record && runtime) {
+      const workspace = demoWorkspaces.find(workspace => workspace.id === wsId)!
+      demoWorkspaces.splice(demoWorkspaces.indexOf(workspace), 1, { ...workspace, sessions: workspace.sessions.map(session => session.id === sessionId ? {
+        ...session, runtime,
+      } : session) })
     }
     const snapshot = ensureDemoWebSession(wsId, sessionId)
     return snapshot
